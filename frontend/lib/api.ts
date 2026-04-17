@@ -13,9 +13,24 @@ export const apiClient = axios.create({
   withCredentials: false,
 });
 
+// Interceptor to redirect specific endpoints to Go backend (High Performance)
+const goEndpoints = ["/tasks", "/requests", "/users", "/groups"];
+const goInternalURL = process.env.GO_INTERNAL_URL || "http://api-go:3000";
+
+const routeToGoIfRequired = (config: any) => {
+  if (isServer && config.url) {
+    if (goEndpoints.some((endpoint) => config.url.startsWith(endpoint))) {
+      config.baseURL = `${goInternalURL}/api/1.0`;
+    }
+  }
+  return config;
+};
+
+apiClient.interceptors.request.use(routeToGoIfRequired);
+
 // Attach auth token (call this from server components with session token)
 export function createAuthClient(token: string) {
-  return axios.create({
+  const client = axios.create({
     baseURL,
     headers: {
       Accept: "application/json",
@@ -23,6 +38,10 @@ export function createAuthClient(token: string) {
       Authorization: `Bearer ${token}`,
     },
   });
+  
+  client.interceptors.request.use(routeToGoIfRequired);
+  
+  return client;
 }
 
 // ─── Typed API helpers ────────────────────────────────────────────────────────
