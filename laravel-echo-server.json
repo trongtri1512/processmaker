@@ -8,15 +8,18 @@
 	],
 	"database": "redis",
 	"databaseConfig": {
-		"redis": {},
+		"redis": {
+			"host": "redis",
+			"port": "6379"
+		},
 		"sqlite": {
 			"databasePath": "/database/laravel-echo-server.sqlite"
 		}
 	},
-	"protocol": "https",
+	"protocol": "http",
 	"socketio": {},
-	"sslCertPath": "/etc/nginx/ssl/processmaker.local.processmaker.com.crt",
-	"sslKeyPath": "/etc/nginx/ssl/processmaker.local.processmaker.com.key",
+	"sslCertPath": "",
+	"sslKeyPath": "",
 	"sslCertChainPath": "",
 	"sslPassphrase": "",
 	"subscribers": {
