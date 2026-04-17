@@ -36,15 +36,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.apiToken = (user as any).apiToken;
-        token.id = user.id;
-        token.username = (user as any).username;
-        token.isAdmin = (user as any).is_administrator;
+        const u = user as any;
+        token.apiToken = u.apiToken;
+        token.id = u.id;
+        token.username = u.username;
+        token.isAdmin = u.is_administrator;
+        // Map name from fullname or firstname+lastname
+        token.name = u.fullname || `${u.firstname ?? ""} ${u.lastname ?? ""}`.trim() || u.username;
+        token.email = u.email;
       }
       return token;
     },
     async session({ session, token }) {
       session.user.id = token.id as string;
+      session.user.name = token.name as string;
+      session.user.email = token.email as string;
       (session as any).apiToken = token.apiToken;
       (session as any).username = token.username;
       (session as any).isAdmin = token.isAdmin;
