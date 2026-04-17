@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/trongtri1512/processmaker-go/controllers"
 	"github.com/trongtri1512/processmaker-go/middleware"
 )
 
@@ -25,4 +26,8 @@ func Setup(app *fiber.App) {
 			"user":   user,
 		})
 	})
+
+	// Phase 2: Read-Heavy APIs
+	protected.Get("/tasks", controllers.GetTasks)
+	protected.Get("/requests", controllers.GetRequests)
 }
