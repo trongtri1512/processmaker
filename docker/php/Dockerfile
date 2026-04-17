@@ -34,7 +34,9 @@ RUN chown -R www-data:www-data /var/www/html \
 
 # Install Backend dependencies directly during build
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs
+RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs \
+    && cp .env.example .env \
+    && php artisan key:generate || true
 
 # Install Frontend dependencies and compile
 RUN npm install \
