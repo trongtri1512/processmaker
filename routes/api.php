@@ -45,6 +45,51 @@ use ProcessMaker\Http\Controllers\Api\WizardTemplateController;
 use ProcessMaker\Http\Controllers\Auth\TwoFactorAuthController;
 use ProcessMaker\Http\Controllers\TestStatusController;
 
+// ─── Public login endpoint for Next.js frontend ──────────────────────────────
+// Creates a Passport personal access token from username/password credentials.
+// This route is public (no auth middleware).
+Route::post('api/1.0/login', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'username' => 'required|string',
+        'password' => 'required|string',
+    ]);
+
+    $user = \ProcessMaker\Models\User::where('username', $request->username)
+        ->orWhere('email', $request->username)
+        ->first();
+
+    if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+        return response()->json(['error' => 'Invalid credentials'], 401);
+    }
+
+    if ($user->status === 'INACTIVE') {
+        return response()->json(['error' => 'Account is inactive'], 403);
+    }
+
+    // Revoke old tokens for this user (optional – keep sessions clean)
+    $user->tokens()->where('name', 'nextjs-session')->delete();
+
+    // Create a fresh personal access token
+    $tokenResult = $user->createToken('nextjs-session');
+
+    return response()->json([
+        'token'      => $tokenResult->accessToken,
+        'token_type' => 'Bearer',
+        'user'       => [
+            'id'               => $user->id,
+            'username'         => $user->username,
+            'firstname'        => $user->firstname,
+            'lastname'         => $user->lastname,
+            'fullname'         => $user->fullname,
+            'email'            => $user->email,
+            'status'           => $user->status,
+            'is_administrator' => $user->is_administrator,
+            'avatar'           => $user->avatar,
+        ],
+    ]);
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 Route::middleware('auth:api', 'setlocale', 'bindings', 'sanitize', 'manager')->prefix('api/1.0')->name('api.')->group(function () {
     // Users
     Route::get('users', [UserController::class, 'index'])->name('users.index'); // Permissions handled in the controller
