@@ -33,7 +33,8 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
 # Install Backend dependencies directly during build
-RUN composer install --no-interaction --optimize-autoloader || true
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs
 
 # Install Frontend dependencies and compile
 RUN npm install \
