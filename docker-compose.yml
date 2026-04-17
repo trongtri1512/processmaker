@@ -31,8 +31,6 @@ services:
       dockerfile: docker/nginx/Dockerfile
     container_name: processmaker_web
     restart: unless-stopped
-    ports:
-      - "8081:80"
     depends_on:
       - app
 
@@ -47,15 +45,11 @@ services:
       MYSQL_ROOT_PASSWORD: secret_root
     volumes:
       - db_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
 
   redis:
     image: redis:alpine
     container_name: processmaker_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
 
   horizon:
     build:
@@ -75,8 +69,6 @@ services:
     container_name: processmaker_echo_server
     restart: unless-stopped
     command: "npx laravel-echo-server start"
-    ports:
-      - "6001:6001"
     working_dir: /var/www/html
     depends_on:
       - redis
