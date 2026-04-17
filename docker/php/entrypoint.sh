@@ -3,32 +3,27 @@ set -e
 
 INSTALLED_MARKER="/var/www/html/storage/.installed"
 
-echo "🚀 ProcessMaker Entrypoint starting..."
+echo "🚀 ProcessMaker API starting..."
 
-# Wait for MySQL to be ready
-echo "⏳ Waiting for MySQL to be ready..."
+# Wait for MySQL
+echo "⏳ Waiting for MySQL..."
 until php -r "new PDO('mysql:host=${DB_HOST};port=${DB_PORT};dbname=${DB_DATABASE}', '${DB_USERNAME}', '${DB_PASSWORD}');" 2>/dev/null; do
-    echo "   MySQL not ready yet, retrying in 3s..."
+    echo "   MySQL not ready, retrying in 3s..."
     sleep 3
 done
-echo "✅ MySQL is ready!"
+echo "✅ MySQL ready!"
 
-# Wait for Redis to be ready
-echo "⏳ Waiting for Redis to be ready..."
-until php -r "
-\$redis = new Redis();
-\$redis->connect('${REDIS_HOST}', ${REDIS_PORT});
-" 2>/dev/null; do
-    echo "   Redis not ready yet, retrying in 3s..."
+# Wait for Redis
+echo "⏳ Waiting for Redis..."
+until php -r "\$r = new Redis(); \$r->connect('${REDIS_HOST}', ${REDIS_PORT});" 2>/dev/null; do
+    echo "   Redis not ready, retrying in 3s..."
     sleep 3
 done
-echo "✅ Redis is ready!"
+echo "✅ Redis ready!"
 
-# First-time installation
+# First-time install
 if [ ! -f "$INSTALLED_MARKER" ]; then
-    echo "🔧 First run detected. Running ProcessMaker installer..."
-
-    # Remove any pre-baked .env so the installer is not blocked
+    echo "🔧 First run – running ProcessMaker installer..."
     rm -f /var/www/html/.env
 
     php artisan processmaker:install \
@@ -45,35 +40,40 @@ if [ ! -f "$INSTALLED_MARKER" ]; then
         --db-username="${DB_USERNAME}" \
         --db-password="${DB_PASSWORD}" \
         --redis-host="${REDIS_HOST}" \
-        --broadcast-driver=redis \
-        --echo-port=6001
+        --broadcast-driver=reverb \
+        --echo-port=8080
 
-    # Append extra runtime configs that the installer doesn't write
-    {
-        echo ""
-        echo "REDIS_HOST=${REDIS_HOST}"
-        echo "REDIS_PORT=${REDIS_PORT}"
-        echo "REDIS_PASSWORD=${REDIS_PASSWORD}"
-        echo "REDIS_CLIENT=phpredis"
-        echo "BROADCAST_DRIVER=redis"
-        echo "CACHE_DRIVER=redis"
-        echo "QUEUE_CONNECTION=redis"
-        echo "SESSION_DRIVER=redis"
-        echo "PROXIES=*"
-    } >> /var/www/html/.env
+    # Add extra env vars the installer doesn't write
+    cat >> /var/www/html/.env <<EOF
+
+REDIS_HOST=${REDIS_HOST}
+REDIS_PORT=${REDIS_PORT}
+REDIS_PASSWORD=${REDIS_PASSWORD}
+REDIS_CLIENT=phpredis
+BROADCAST_DRIVER=reverb
+REVERB_APP_ID=processmaker
+REVERB_APP_KEY=processmaker-key
+REVERB_APP_SECRET=processmaker-secret
+REVERB_HOST=0.0.0.0
+REVERB_PORT=8080
+REVERB_SCHEME=http
+CACHE_DRIVER=redis
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=redis
+PROXIES=*
+EOF
 
     php artisan config:clear
     php artisan passport:install --force || true
     php artisan storage:link || true
 
-    # Create marker so we don't reinstall on restart
     touch "$INSTALLED_MARKER"
     echo "🎉 ProcessMaker installed successfully!"
 else
-    echo "✅ ProcessMaker already installed, skipping install step."
+    echo "✅ Already installed – skipping install."
     php artisan config:clear
-    php artisan cache:clear
+    php artisan cache:clear || true
 fi
 
-echo "▶️  Starting PHP-FPM..."
-exec php-fpm
+echo "▶️  Starting Supervisor (nginx + php-fpm + horizon + reverb)..."
+exec supervisord -c /etc/supervisor/conf.d/supervisord.conf

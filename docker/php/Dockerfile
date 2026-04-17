@@ -2,48 +2,50 @@ FROM php:8.4-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    supervisor \
-    mariadb-client
+    git curl libpng-dev libonig-dev libxml2-dev \
+    zip unzip mariadb-client nginx supervisor \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
+# Install PHP extensions (including opentelemetry required by ProcessMaker)
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions gd imagick imap pdo_mysql zip bcmath redis sockets pcntl opentelemetry
 
-# Install Node.js 20.x
+# Install Node.js 20 (for npm run dev)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
-
-# Clear apt cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y nodejs && apt-get clean
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Copy application source
 WORKDIR /var/www/html
 COPY . /var/www/html
 
-# Set permissions
+# Permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
-# Install PHP dependencies (no .env needed at build time)
+# Install PHP dependencies
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs
 
-# Install and compile frontend assets
+# Build frontend assets
 RUN npm install && npm run dev || true
 
-# Copy and enable entrypoint script
+# Nginx configuration
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+# Disable the default nginx site
+RUN rm -f /etc/nginx/sites-enabled/default
+
+# Supervisor log dir
+RUN mkdir -p /var/log/supervisor
+
+# Copy supervisor and entrypoint
+COPY docker/php/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+EXPOSE 80 8080
 
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
