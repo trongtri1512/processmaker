@@ -74,5 +74,5 @@ else
     php artisan cache:clear || true
 fi
 
-echo "▶️  Starting Supervisor (nginx + php-fpm + horizon)..."
+echo "▶️  Starting Supervisor (Octane/FrankenPHP + horizon)..."
 exec supervisord -c /etc/supervisor/conf.d/supervisord.conf
