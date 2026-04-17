@@ -8,22 +8,42 @@ services:
     container_name: processmaker_app
     restart: unless-stopped
     environment:
+      # Database
       - DB_CONNECTION=mysql
       - DB_HOST=db
       - DB_PORT=3306
       - DB_DATABASE=processmaker
       - DB_USERNAME=processmaker
       - DB_PASSWORD=secret
+      # Redis
       - REDIS_HOST=redis
       - REDIS_PASSWORD=null
       - REDIS_PORT=6379
+      - REDIS_CLIENT=phpredis
+      # App
+      - APP_URL=${APP_URL:-http://localhost}
+      - APP_ENV=production
+      - APP_DEBUG=false
+      # Queue / Cache / Session / Broadcast
       - BROADCAST_DRIVER=redis
       - CACHE_DRIVER=redis
       - QUEUE_CONNECTION=redis
       - SESSION_DRIVER=redis
+      # ProcessMaker Admin (first-run only)
+      - PM_ADMIN_USERNAME=${PM_ADMIN_USERNAME:-admin}
+      - PM_ADMIN_PASSWORD=${PM_ADMIN_PASSWORD:-processmaker2024!}
+      - PM_ADMIN_EMAIL=${PM_ADMIN_EMAIL:-admin@processmaker.local}
+      - PM_ADMIN_FIRST_NAME=${PM_ADMIN_FIRST_NAME:-Admin}
+      - PM_ADMIN_LAST_NAME=${PM_ADMIN_LAST_NAME:-User}
+      # Trust all proxies (Traefik/Nginx edge)
+      - PROXIES=*
+    volumes:
+      - pm_storage:/var/www/html/storage
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   web:
     build:
@@ -45,11 +65,21 @@ services:
       MYSQL_ROOT_PASSWORD: secret_root
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "processmaker", "-psecret"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
     container_name: processmaker_redis
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   horizon:
     build:
@@ -57,17 +87,28 @@ services:
       dockerfile: docker/php/Dockerfile
     container_name: processmaker_horizon
     restart: unless-stopped
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        echo "⏳ Waiting for ProcessMaker to be installed..."
+        while [ ! -f /var/www/html/storage/.installed ]; do sleep 5; done
+        echo "✅ Running Horizon..."
+        php artisan horizon
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PASSWORD=null
-      - REDIS_PORT=6379
       - DB_CONNECTION=mysql
       - DB_HOST=db
       - DB_PORT=3306
       - DB_DATABASE=processmaker
       - DB_USERNAME=processmaker
       - DB_PASSWORD=secret
-    command: sh -c "while [ ! -f vendor/autoload.php ]; do sleep 5; done && php artisan horizon"
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=null
+      - REDIS_PORT=6379
+      - REDIS_CLIENT=phpredis
+      - APP_URL=${APP_URL:-http://localhost}
+      - PROXIES=*
+    volumes:
+      - pm_storage:/var/www/html/storage
     depends_on:
       - app
       - redis
@@ -85,3 +126,4 @@ services:
 
 volumes:
   db_data:
+  pm_storage:

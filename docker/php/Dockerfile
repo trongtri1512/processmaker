@@ -12,16 +12,16 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     mariadb-client
 
-# Install PHP extensions using the widely recommended mlocati script
+# Install PHP extensions
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions gd imagick imap pdo_mysql zip bcmath redis sockets pcntl opentelemetry
 
-# Install Node.js & NPM (Node 20.x works nicely)
+# Install Node.js 20.x
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
-# Clear cache
+# Clear apt cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
@@ -29,15 +29,21 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 COPY . /var/www/html
+
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
-# Install Backend dependencies directly during build
+# Install PHP dependencies (no .env needed at build time)
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs \
-    && cp .env.example .env \
-    && php artisan key:generate || true
+RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs
 
-# Install Frontend dependencies and compile
-RUN npm install \
-    && npm run dev || true
+# Install and compile frontend assets
+RUN npm install && npm run dev || true
+
+# Copy and enable entrypoint script
+COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
