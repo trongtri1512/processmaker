@@ -18,6 +18,7 @@ const nav = [
 
 const adminNav = [
   { label: "Users",     href: "/admin/users",    icon: Users },
+  { label: "Groups",    href: "/admin/groups",   icon: Users },
   { label: "Settings",  href: "/admin/settings", icon: Settings },
 ];
 
