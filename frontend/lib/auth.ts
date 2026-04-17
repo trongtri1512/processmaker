@@ -5,6 +5,7 @@ import axios from "axios";
 const LARAVEL_URL = process.env.LARAVEL_INTERNAL_URL || "http://api:80";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       name: "credentials",
