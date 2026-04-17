@@ -14,21 +14,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        const loginUrl = `${LARAVEL_URL}/api/1.0/login`;
+        console.log(`[NextAuth] Calling: POST ${loginUrl}`);
         try {
           const response = await axios.post(
-            `${LARAVEL_URL}/api/1.0/login`,
-            {
-              username: credentials.username,
-              password: credentials.password,
-            },
-            { headers: { Accept: "application/json" } }
+            loginUrl,
+            { username: credentials.username, password: credentials.password },
+            { headers: { Accept: "application/json" }, timeout: 10000 }
           );
           const { token, user } = response.data;
-          if (token && user) {
-            return { ...user, apiToken: token };
-          }
+          console.log(`[NextAuth] Login success: ${user?.username}`);
+          if (token && user) return { ...user, apiToken: token };
           return null;
-        } catch {
+        } catch (error: any) {
+          console.error(
+            `[NextAuth] Login FAILED status=${error.response?.status} msg=${error.message}`,
+            error.response?.data ?? ""
+          );
           return null;
         }
       },
