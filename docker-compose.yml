@@ -46,6 +46,26 @@ services:
       redis:
         condition: service_healthy
 
+  # ─── Go API (High-performance API) ───────────────────────────────────────────
+  api-go:
+    build:
+      context: ./api-go
+      dockerfile: Dockerfile
+    container_name: processmaker_api_go
+    restart: unless-stopped
+    environment:
+      # Database
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: processmaker
+      DB_USERNAME: processmaker
+      DB_PASSWORD: secret
+    volumes:
+      - pm_storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
   # ─── Next.js Frontend ─────────────────────────────────────────────────────────
   frontend:
     build:
