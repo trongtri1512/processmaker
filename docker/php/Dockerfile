@@ -37,9 +37,9 @@ COPY . /var/www/html
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
-# Install PHP deps + laravel/octane (build-time stub .env)
+# Install PHP deps + laravel/octane (build-time stub .env using sqlite to avoid DB connection errors)
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN printf 'APP_NAME=ProcessMaker\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=http://localhost\nDB_HOST=localhost\nDB_DATABASE=processmaker\nDB_USERNAME=root\nDB_PASSWORD=\nREDIS_HOST=localhost\n' > .env \
+RUN printf 'APP_NAME=ProcessMaker\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=http://localhost\nDB_CONNECTION=sqlite\nDB_DATABASE=:memory:\nCACHE_DRIVER=array\nQUEUE_CONNECTION=sync\nSESSION_DRIVER=array\nREDIS_HOST=localhost\n' > .env \
     && composer install --no-interaction --optimize-autoloader --ignore-platform-reqs \
     && composer require laravel/octane:^2.0 --no-interaction --ignore-platform-reqs \
     && rm .env
