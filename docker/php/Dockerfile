@@ -31,3 +31,10 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
+
+# Install Backend dependencies directly during build
+RUN composer install --no-interaction --optimize-autoloader || true
+
+# Install Frontend dependencies and compile
+RUN npm install \
+    && npm run dev || true
