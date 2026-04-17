@@ -66,7 +66,7 @@ services:
       dockerfile: docker/php/Dockerfile
     container_name: processmaker_horizon
     restart: unless-stopped
-    command: php artisan horizon
+    command: sh -c "while [ ! -f vendor/autoload.php ]; do sleep 5; done && php artisan horizon"
     volumes:
       - .:/var/www/html
     depends_on:
