@@ -162,3 +162,38 @@ type EnvironmentVariable struct {
 func (EnvironmentVariable) TableName() string {
 	return "environment_variables"
 }
+
+// ProcessTaskAssignment represents the `process_task_assignments` table.
+type ProcessTaskAssignment struct {
+	ID             uint   `gorm:"primaryKey" json:"id"`
+	ProcessID      uint   `gorm:"column:process_id" json:"process_id"`
+	ProcessTaskID  string `gorm:"column:process_task_id;size:255" json:"process_task_id"` // BPMN node ID
+	AssignmentID   uint   `gorm:"column:assignment_id" json:"assignment_id"`
+	AssignmentType string `gorm:"column:assignment_type;size:255" json:"assignment_type"` // User or Group
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (ProcessTaskAssignment) TableName() string {
+	return "process_task_assignments"
+}
+
+// ProcessLaunchpad represents the `process_launchpad` table.
+type ProcessLaunchpad struct {
+	ID         string `gorm:"primaryKey;size:36" json:"id"`
+	UserID     uint   `gorm:"column:user_id" json:"user_id"`
+	ProcessID  uint   `gorm:"column:process_id" json:"process_id"`
+	Properties string `gorm:"type:text" json:"properties,omitempty"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+
+	User    *User    `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Process *Process `gorm:"foreignKey:ProcessID" json:"process,omitempty"`
+}
+
+func (ProcessLaunchpad) TableName() string {
+	return "process_launchpad"
+}
+

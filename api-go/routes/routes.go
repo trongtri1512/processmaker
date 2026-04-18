@@ -56,22 +56,40 @@ func Setup(app *fiber.App) {
 	p.Get("/permissions", controllers.GetPermissions)
 	p.Put("/permissions", controllers.UpdatePermissions)
 
-	// ── Phase B: Processes ───────────────────────────────────────────────
+	// ── Phase B1: Processes ──────────────────────────────────────────────
 	p.Get("/processes", controllers.GetProcesses)
 	p.Get("/processes/:id", controllers.GetProcess)
 	p.Post("/processes", controllers.CreateProcess)
 	p.Put("/processes/:id", controllers.UpdateProcess)
 	p.Delete("/processes/:id", controllers.DeleteProcess)
+	p.Put("/processes/:id/draft", controllers.UpdateProcessDraft)
+	p.Post("/processes/:id/close", controllers.CloseProcess)
+	p.Put("/processes/:id/duplicate", controllers.DuplicateProcess)
+	p.Get("/processes/:id/bpmn", controllers.DownloadBpmn)
+	p.Post("/processes/:id/export", controllers.ExportProcess)
+	p.Post("/processes/import", controllers.ImportProcess)
+	p.Get("/processes/:id/start_events", controllers.GetStartEvents)
+	p.Post("/processes/:id/events/:eventId", controllers.StartProcess)
 
-	// ── Phase B: Process Categories ──────────────────────────────────────
+	// ── Phase B2: Process Categories ─────────────────────────────────────
 	p.Get("/process_categories", controllers.GetProcessCategories)
 	p.Get("/process_categories/:id", controllers.GetProcessCategory)
 	p.Post("/process_categories", controllers.CreateProcessCategory)
 	p.Put("/process_categories/:id", controllers.UpdateProcessCategory)
 	p.Delete("/process_categories/:id", controllers.DeleteProcessCategory)
 
-	// ── Phase B/4: Engine ────────────────────────────────────────────────
-	p.Post("/processes/:id/events/:eventId", controllers.StartProcess)
+	// ── Phase B3: Task Assignments ───────────────────────────────────────
+	p.Get("/process_task_assignments", controllers.GetTaskAssignments)
+	p.Post("/process_task_assignments", controllers.CreateTaskAssignment)
+	p.Put("/process_task_assignments/:id", controllers.UpdateTaskAssignment)
+	p.Delete("/process_task_assignments/:id", controllers.DeleteTaskAssignment)
+
+	// ── Phase B4: Launchpad ──────────────────────────────────────────────
+	p.Get("/process_launchpads", controllers.GetLaunchpads)
+	p.Post("/process_launchpads", controllers.CreateLaunchpad)
+	p.Put("/process_launchpads/:id", controllers.UpdateLaunchpad)
+	p.Delete("/process_launchpads/:id", controllers.DeleteLaunchpad)
+
 
 	// ── Phase C: Screens ─────────────────────────────────────────────────
 	p.Get("/screens", controllers.GetScreens)
