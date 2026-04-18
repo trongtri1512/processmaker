@@ -66,6 +66,6 @@ func main() {
 	// Setup routes
 	routes.Setup(app)
 
-	log.Println("🚀 ProcessMaker Go BPMN Engine starting on :3000")
-	log.Fatal(app.Listen(":3000"))
+	log.Println("🚀 ProcessMaker Go BPMN Engine starting on :80")
+	log.Fatal(app.Listen(":80"))
 }
