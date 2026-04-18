@@ -10,7 +10,7 @@ type ProcessRequestToken struct {
 	ID               string `gorm:"primaryKey;column:id;type:char(36)" json:"id"`
 	ProcessID        string `gorm:"column:process_id;type:char(36)" json:"process_id"`
 	ProcessRequestID string `gorm:"column:process_request_id;type:char(36)" json:"process_request_id"`
-	UserID           string `gorm:"column:user_id;type:char(36)" json:"user_id"`
+	UserID           uint   `gorm:"column:user_id;type:bigint unsigned" json:"user_id"`
 	ElementID        string `gorm:"column:element_id;size:255" json:"element_id"`
 	ElementType      string `gorm:"column:element_type;size:255" json:"element_type"`
 	ElementName      string `gorm:"column:element_name;size:255" json:"element_name"`

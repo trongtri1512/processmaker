@@ -9,7 +9,7 @@ import (
 type ProcessRequest struct {
 	ID                     string         `gorm:"primaryKey;column:id;type:char(36)" json:"id"`
 	ProcessID              string         `gorm:"column:process_id;type:char(36)" json:"process_id"`
-	UserID                 string         `gorm:"column:user_id;type:char(36)" json:"user_id"`
+	UserID                 uint           `gorm:"column:user_id;type:bigint unsigned" json:"user_id"`
 	ParticipantID          string         `gorm:"column:participant_id;type:char(36)" json:"participant_id"`
 	Status                 string         `gorm:"column:status;size:50" json:"status"`
 	Name                   string         `gorm:"column:name;size:255" json:"name"`

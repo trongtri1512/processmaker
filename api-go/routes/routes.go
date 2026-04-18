@@ -34,4 +34,7 @@ func Setup(app *fiber.App) {
 	// Phase 2: User APIs
 	protected.Get("/users", controllers.GetUsers)
 	protected.Get("/groups", controllers.GetGroups)
+
+	// Phase 4: Engine APIs
+	protected.Post("/processes/:id/events/:eventId", controllers.StartProcess)
 }
