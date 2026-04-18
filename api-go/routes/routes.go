@@ -8,11 +8,11 @@ import (
 
 func Setup(app *fiber.App) {
 	// ── Serve Static Webpack Assets ──────────────────────────────────────
-	app.Static("/", "../public")
-	app.Static("/css", "../public/css")
-	app.Static("/js", "../public/js")
-	app.Static("/fonts", "../public/fonts")
-	app.Static("/images", "../public/images")
+	app.Static("/", "./public")
+	app.Static("/css", "./public/css")
+	app.Static("/js", "./public/js")
+	app.Static("/fonts", "./public/fonts")
+	app.Static("/images", "./public/images")
 
 	// ── Web UI Routes (HTML Templates) ───────────────────────────────────
 	app.Get("/login", controllers.ShowLogin)
