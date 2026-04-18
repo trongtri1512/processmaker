@@ -8,8 +8,8 @@ import (
 
 type Process struct {
 	ID                string `gorm:"primaryKey;column:id;type:char(36)" json:"id"`
-	ProcessCategoryID string `gorm:"column:process_category_id;type:char(36)" json:"process_category_id"`
-	UserID            string `gorm:"column:user_id;type:char(36)" json:"user_id"`
+	ProcessCategoryID uint   `gorm:"column:process_category_id" json:"process_category_id"`
+	UserID            uint   `gorm:"column:user_id" json:"user_id"`
 	Name              string `gorm:"column:name;size:255" json:"name"`
 	Description       string `gorm:"column:description;type:text" json:"description"`
 	Status            string `gorm:"column:status;size:50;default:'ACTIVE'" json:"status"`
@@ -25,6 +25,7 @@ type Process struct {
 
 	// Relations
 	Category *ProcessCategory `gorm:"foreignKey:ProcessCategoryID" json:"category,omitempty"`
+	User     *User            `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (Process) TableName() string {

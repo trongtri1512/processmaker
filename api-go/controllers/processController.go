@@ -44,7 +44,7 @@ func GetProcesses(c *fiber.Ctx) error {
 	}
 
 	query.Count(&total)
-	if err := query.Preload("Category").Order("created_at desc").Offset(offset).Limit(perPage).Find(&processes).Error; err != nil {
+	if err := query.Preload("Category").Preload("User").Order("created_at desc").Offset(offset).Limit(perPage).Find(&processes).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch processes"})
 	}
 
