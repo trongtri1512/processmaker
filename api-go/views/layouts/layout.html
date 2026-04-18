@@ -22,9 +22,27 @@
       window.Processmaker = {
         apiTimeout: 30000,
         messages: [],
-        notificationMessages: {}
+        notificationMessages: {},
+        notifications: [],
+        packages: [],
+        ai: {
+          ragCollections: false,
+          genieClientTimeout: 30000
+        },
+        user: {
+          {{if .User}}
+          id: {{.User.ID}},
+          fullname: "{{.User.FullName}}",
+          {{else}}
+          id: 1,
+          fullname: "Admin",
+          {{end}}
+          lang: "en",
+          timezone: "UTC",
+          datetime_format: "YYYY-MM-DD HH:mm:ss"
+        }
       };
-      // For Vue app compilation
+      // For Vue app compilation expecting either casing
       window.ProcessMaker = window.Processmaker;
       
       // MOCK: Intercept axios request to inject JWT
@@ -49,6 +67,12 @@
   </div>
   
   <div class="d-flex flex-grow-1 flex-column overflow-hidden">
+    <!-- Vue Navbar Mount Points (Required for app-layout.js to avoid crash) -->
+    <div class="flex-grow-1">
+        <div id="navbar"></div>
+        <div id="navbarMobile"></div>
+    </div>
+    
     <div class="flex-grow-1 d-flex flex-column overflow-hidden h-100" id="mainbody">
       <div id="main" class="main flex-grow-1 h-100 overflow-auto py-3">
           {{embed}}
