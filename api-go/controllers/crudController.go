@@ -62,7 +62,7 @@ func CreateProcess(c *fiber.Ctx) error {
 	type Input struct {
 		Name              string `json:"name"`
 		Description       string `json:"description"`
-		ProcessCategoryID string `json:"process_category_id"`
+		ProcessCategoryID uint   `json:"process_category_id"`
 		Status            string `json:"status"`
 	}
 	var input Input
