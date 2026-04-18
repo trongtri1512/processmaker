@@ -30,6 +30,7 @@ WORKDIR /app
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /app/main .
+COPY --from=builder /app/views ./views
 
 # Expose port
 EXPOSE 3000

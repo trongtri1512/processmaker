@@ -20,6 +20,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-processmaker-go-secret-key}
     volumes:
       - pm_storage:/var/www/html/storage
+      - ./public:/public
     depends_on:
       db:
         condition: service_healthy
