@@ -379,7 +379,7 @@ func DeleteScreenCategory(c *fiber.Ctx) error {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Phase D: Scripts
+// Phase D1: Scripts
 // ──────────────────────────────────────────────────────────────────────────────
 
 func GetScripts(c *fiber.Ctx) error {
@@ -390,14 +390,25 @@ func GetScripts(c *fiber.Ctx) error {
 	if perPage <= 0 { perPage = 10 }
 	var total int64
 	query := database.DB.Model(&models.Script{})
+	if s := c.Query("type", ""); s != "" { query = query.Where("type = ?", s) }
+	if s := c.Query("status", ""); s != "" { query = query.Where("status = ?", s) }
+	if s := c.Query("script_category_id", ""); s != "" {
+		query = query.Where("script_category_id = ?", s)
+	}
+	if s := c.Query("search", ""); s != "" {
+		f := "%" + s + "%"
+		query = query.Where("title LIKE ? OR description LIKE ?", f, f)
+	}
 	query.Count(&total)
-	query.Order("created_at desc").Offset((page-1)*perPage).Limit(perPage).Find(&items)
+	query.Preload("Category").Preload("RunAsUser").Preload("ScriptExecutor").
+		Order("created_at desc").Offset((page-1)*perPage).Limit(perPage).Find(&items)
 	return c.JSON(fiber.Map{"data": items, "meta": paginationMeta(page, perPage, total)})
 }
 
 func GetScript(c *fiber.Ctx) error {
 	var item models.Script
-	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+	if err := database.DB.Preload("Category").Preload("RunAsUser").Preload("ScriptExecutor").
+		First(&item, c.Params("id")).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
 	}
 	return c.JSON(item)
@@ -406,7 +417,12 @@ func GetScript(c *fiber.Ctx) error {
 func CreateScript(c *fiber.Ctx) error {
 	var item models.Script
 	c.BodyParser(&item)
+	if item.Title == "" {
+		return c.Status(422).JSON(fiber.Map{"error": "title is required"})
+	}
 	if item.Status == "" { item.Status = "ACTIVE" }
+	if item.Language == "" { item.Language = "php" }
+	if item.Timeout <= 0 { item.Timeout = 60 }
 	database.DB.Create(&item)
 	return c.Status(201).JSON(item)
 }
@@ -420,6 +436,7 @@ func UpdateScript(c *fiber.Ctx) error {
 	c.BodyParser(&updates)
 	delete(updates, "id")
 	database.DB.Model(&item).Updates(updates)
+	database.DB.First(&item, c.Params("id"))
 	return c.JSON(item)
 }
 
@@ -428,15 +445,94 @@ func DeleteScript(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "success"})
 }
 
+func UpdateScriptDraft(c *fiber.Ctx) error {
+	var item models.Script
+	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	var updates map[string]interface{}
+	c.BodyParser(&updates)
+	database.DB.Model(&item).Updates(updates)
+	return c.JSON(fiber.Map{"status": "success", "message": "Draft saved"})
+}
+
+func CloseScript(c *fiber.Ctx) error {
+	var item models.Script
+	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	return c.JSON(fiber.Map{"status": "success", "message": "Script closed"})
+}
+
+func DuplicateScript(c *fiber.Ctx) error {
+	var original models.Script
+	if err := database.DB.First(&original, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+
+	type Input struct {
+		Title string `json:"title"`
+	}
+	var input Input
+	c.BodyParser(&input)
+	title := input.Title
+	if title == "" {
+		title = "Copy of " + original.Title
+	}
+
+	dup := models.Script{
+		Title:            title,
+		Description:      original.Description,
+		Language:         original.Language,
+		Code:             original.Code,
+		Timeout:          original.Timeout,
+		RetryAttempts:    original.RetryAttempts,
+		RetryWaitTime:    original.RetryWaitTime,
+		RunAsUserID:      original.RunAsUserID,
+		ScriptExecutorID: original.ScriptExecutorID,
+		Status:           "ACTIVE",
+		CategoryID:       original.CategoryID,
+	}
+	database.DB.Create(&dup)
+	return c.Status(201).JSON(dup)
+}
+
+func PreviewScript(c *fiber.Ctx) error {
+	// A placeholder for script execution
+	return c.JSON(fiber.Map{
+		"status": "success",
+		"output": "Preview executed successfully (Mock)",
+	})
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Phase D2: Script Categories
+// ──────────────────────────────────────────────────────────────────────────────
+
 func GetScriptCategories(c *fiber.Ctx) error {
 	var items []models.ScriptCategory
-	database.DB.Order("name asc").Find(&items)
+	query := database.DB.Order("name asc")
+	if s := c.Query("status", ""); s != "" {
+		query = query.Where("status = ?", s)
+	}
+	query.Find(&items)
 	return c.JSON(fiber.Map{"data": items})
+}
+
+func GetScriptCategory(c *fiber.Ctx) error {
+	var item models.ScriptCategory
+	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	return c.JSON(item)
 }
 
 func CreateScriptCategory(c *fiber.Ctx) error {
 	var item models.ScriptCategory
 	c.BodyParser(&item)
+	if item.Name == "" {
+		return c.Status(422).JSON(fiber.Map{"error": "name is required"})
+	}
 	if item.Status == "" { item.Status = "ACTIVE" }
 	database.DB.Create(&item)
 	return c.Status(201).JSON(item)
@@ -449,6 +545,7 @@ func UpdateScriptCategory(c *fiber.Ctx) error {
 	}
 	var updates map[string]interface{}
 	c.BodyParser(&updates)
+	delete(updates, "id")
 	database.DB.Model(&item).Updates(updates)
 	return c.JSON(item)
 }
@@ -456,6 +553,38 @@ func UpdateScriptCategory(c *fiber.Ctx) error {
 func DeleteScriptCategory(c *fiber.Ctx) error {
 	database.DB.Delete(&models.ScriptCategory{}, c.Params("id"))
 	return c.JSON(fiber.Map{"status": "success"})
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Phase D3: Script Executors
+// ──────────────────────────────────────────────────────────────────────────────
+
+func GetScriptExecutors(c *fiber.Ctx) error {
+	var items []models.ScriptExecutor
+	database.DB.Order("title asc").Find(&items)
+	return c.JSON(fiber.Map{"data": items})
+}
+
+func GetScriptExecutorLanguages(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{
+		"data": []map[string]string{
+			{"text": "PHP Executor", "value": "php", "initDockerFile": "FROM php:8.2"},
+			{"text": "JavaScript Executor", "value": "javascript", "initDockerFile": "FROM node:18"},
+			{"text": "Python Executor", "value": "python", "initDockerFile": "FROM python:3.10"},
+		},
+	})
+}
+
+func UpdateScriptExecutor(c *fiber.Ctx) error {
+	var item models.ScriptExecutor
+	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	var updates map[string]interface{}
+	c.BodyParser(&updates)
+	delete(updates, "id")
+	database.DB.Model(&item).Updates(updates)
+	return c.JSON(item)
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

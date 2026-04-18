@@ -110,18 +110,28 @@ func Setup(app *fiber.App) {
 	p.Put("/screen_categories/:id", controllers.UpdateScreenCategory)
 	p.Delete("/screen_categories/:id", controllers.DeleteScreenCategory)
 
-	// ── Phase D: Scripts ─────────────────────────────────────────────────
+	// ── Phase D1: Scripts ────────────────────────────────────────────────
 	p.Get("/scripts", controllers.GetScripts)
 	p.Get("/scripts/:id", controllers.GetScript)
 	p.Post("/scripts", controllers.CreateScript)
 	p.Put("/scripts/:id", controllers.UpdateScript)
 	p.Delete("/scripts/:id", controllers.DeleteScript)
+	p.Put("/scripts/:id/draft", controllers.UpdateScriptDraft)
+	p.Post("/scripts/:id/close", controllers.CloseScript)
+	p.Put("/scripts/:id/duplicate", controllers.DuplicateScript)
+	p.Post("/scripts/:id/preview", controllers.PreviewScript)
 
-	// ── Phase D: Script Categories ───────────────────────────────────────
+	// ── Phase D2: Script Categories ──────────────────────────────────────
 	p.Get("/script_categories", controllers.GetScriptCategories)
+	p.Get("/script_categories/:id", controllers.GetScriptCategory)
 	p.Post("/script_categories", controllers.CreateScriptCategory)
 	p.Put("/script_categories/:id", controllers.UpdateScriptCategory)
 	p.Delete("/script_categories/:id", controllers.DeleteScriptCategory)
+
+	// ── Phase D3: Script Executors ───────────────────────────────────────
+	p.Get("/script_executors", controllers.GetScriptExecutors)
+	p.Get("/script_executors/available-languages", controllers.GetScriptExecutorLanguages)
+	p.Put("/script_executors/:id", controllers.UpdateScriptExecutor)
 
 	// ── Phase 2/E: Tasks ─────────────────────────────────────────────────
 	p.Get("/tasks", controllers.GetTasks)

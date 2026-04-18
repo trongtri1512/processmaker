@@ -67,23 +67,50 @@ func (ScreenCategory) TableName() string {
 
 // Script represents the `scripts` table.
 type Script struct {
-	ID           uint           `gorm:"primaryKey" json:"id"`
-	Title        string         `gorm:"column:title;size:255;not null" json:"title"`
-	Description  string         `gorm:"type:text" json:"description,omitempty"`
-	Language     string         `gorm:"size:50;default:'php'" json:"language"`
-	Code         string         `gorm:"type:longtext" json:"code,omitempty"`
-	Status       string         `gorm:"size:50;default:'ACTIVE'" json:"status"`
-	CategoryID   *uint          `gorm:"column:script_category_id" json:"script_category_id,omitempty"`
-	RunAsUserID  *uint          `gorm:"column:run_as_user_id" json:"run_as_user_id,omitempty"`
-	Timeout      int            `gorm:"default:60" json:"timeout"`
+	ID               uint           `gorm:"primaryKey" json:"id"`
+	Key              string         `gorm:"size:255;unique" json:"key"`
+	Title            string         `gorm:"column:title;size:255;not null" json:"title"`
+	Description      string         `gorm:"type:text" json:"description,omitempty"`
+	Language         string         `gorm:"size:50;default:'php'" json:"language"`
+	Code             string         `gorm:"type:longtext" json:"code,omitempty"`
+	Status           string         `gorm:"size:50;default:'ACTIVE'" json:"status"`
+	CategoryID       *uint          `gorm:"column:script_category_id" json:"script_category_id,omitempty"`
+	RunAsUserID      *uint          `gorm:"column:run_as_user_id" json:"run_as_user_id,omitempty"`
+	Timeout          int            `gorm:"default:60" json:"timeout"`
+	RetryAttempts    int            `gorm:"column:retry_attempts;default:0" json:"retry_attempts"`
+	RetryWaitTime    int            `gorm:"column:retry_wait_time;default:0" json:"retry_wait_time"`
+	ScriptExecutorID *uint          `gorm:"column:script_executor_id" json:"script_executor_id,omitempty"`
+
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+
+	Category       *ScriptCategory `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
+	RunAsUser      *User           `gorm:"foreignKey:RunAsUserID" json:"run_as_user,omitempty"`
+	ScriptExecutor *ScriptExecutor `gorm:"foreignKey:ScriptExecutorID" json:"script_executor,omitempty"`
+}
+
+func (Script) TableName() string {
+	return "scripts"
+}
+
+// ScriptExecutor represents the `script_executors` table.
+type ScriptExecutor struct {
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	Title       string         `gorm:"size:255;not null" json:"title"`
+	Description string         `gorm:"type:text" json:"description,omitempty"`
+	Language    string         `gorm:"size:50;not null" json:"language"`
+	Config      string         `gorm:"type:text" json:"config,omitempty"`
+	IsSystem    bool           `gorm:"default:false" json:"is_system"`
+	Type        string         `gorm:"size:50" json:"type,omitempty"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-func (Script) TableName() string {
-	return "scripts"
+func (ScriptExecutor) TableName() string {
+	return "script_executors"
 }
 
 // ScriptCategory represents the `script_categories` table.
