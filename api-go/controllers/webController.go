@@ -18,6 +18,7 @@ func ShowProcesses(c *fiber.Ctx) error {
 	// In reality we should check JWT in cookie.
 	return c.Render("processes/index", fiber.Map{
 		"Title": "Processes",
+		"PageScript": "/js/processes/index.js",
 		"User": fiber.Map{
 			"ID":       1,
 			"FullName": "Go Admin",
