@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/dop251/goja v0.0.0-20260311135729-065cd970411c
+	github.com/expr-lang/expr v1.17.8
 	github.com/gofiber/fiber/v2 v2.52.12
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0

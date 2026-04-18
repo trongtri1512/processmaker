@@ -5,53 +5,55 @@ import (
 	"strings"
 
 	"github.com/dop251/goja"
+	"github.com/expr-lang/expr"
 )
 
 // EvaluateCondition evaluates a BPMN condition expression against process data.
-// Supports JavaScript expressions commonly used in ProcessMaker:
-//   - "data.amount > 1000"
-//   - "data.status === 'approved'"
-//   - "${data.total > 500}"
+// Supports generic JS-like expressions handled by expr-lang/expr.
+// Examples: "data.amount > 1000", "status == 'approved'"
 func EvaluateCondition(expression string, data map[string]interface{}) (bool, error) {
 	if expression == "" {
 		return true, nil // Empty condition is always true (default flow)
 	}
 
 	// Clean up ProcessMaker-style expressions
-	expr := strings.TrimSpace(expression)
-	expr = strings.TrimPrefix(expr, "${")
-	expr = strings.TrimSuffix(expr, "}")
-	expr = strings.TrimSpace(expr)
+	exprStr := strings.TrimSpace(expression)
+	exprStr = strings.TrimPrefix(exprStr, "${")
+	exprStr = strings.TrimSuffix(exprStr, "}")
+	exprStr = strings.TrimSpace(exprStr)
 
-	if expr == "" {
+	if exprStr == "" {
 		return true, nil
 	}
 
-	// Create a new JavaScript runtime
-	vm := goja.New()
-
-	// Inject the process data as a "data" object
-	if data != nil {
-		vm.Set("data", data)
-	} else {
-		vm.Set("data", map[string]interface{}{})
+	// Prepare environment
+	env := map[string]interface{}{
+		"data": data,
 	}
-
-	// Also inject top-level keys for backward compatibility
+	// Inject top-level keys for backward compatibility
 	if data != nil {
 		for k, v := range data {
-			vm.Set(k, v)
+			env[k] = v
 		}
 	}
 
-	// Execute the expression
-	result, err := vm.RunString(expr)
+	// Compile and run the expression
+	program, err := expr.Compile(exprStr, expr.Env(env))
 	if err != nil {
-		return false, fmt.Errorf("expression evaluation failed: %v (expr: %s)", err, expr)
+		return false, fmt.Errorf("PMQL compile failed: %v (expr: %s)", err, exprStr)
+	}
+
+	result, err := expr.Run(program, env)
+	if err != nil {
+		return false, fmt.Errorf("PMQL execution failed: %v", err)
 	}
 
 	// Interpret result as boolean
-	return result.ToBoolean(), nil
+	if boolVal, ok := result.(bool); ok {
+		return boolVal, nil
+	}
+
+	return false, fmt.Errorf("PMQL did not return a boolean")
 }
 
 // ExecuteScript runs a JavaScript script with access to process data.

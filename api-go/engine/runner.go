@@ -2,6 +2,7 @@ package engine
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -74,6 +75,10 @@ func (r *TokenRunner) ActivateNode(nodeID string) {
 
 	case NodeInclusiveGateway:
 		r.handleInclusiveGateway(node)
+
+	// ── Events ───────────────────────────────────────────────────────────
+	case NodeIntermediateCatchEvent:
+		r.handleIntermediateCatchEvent(node)
 
 	// ── End event ────────────────────────────────────────────────────────
 	case NodeEndEvent:
@@ -238,6 +243,61 @@ func (r *TokenRunner) handleInclusiveGateway(node *NodeInfo) {
 			r.ActivateNode(flow.TargetRef)
 		}
 	}
+}
+
+func (r *TokenRunner) handleIntermediateCatchEvent(node *NodeInfo) {
+	log.Printf("[engine] Intermediate catch event: %s", node.Name)
+
+	if node.TimeDuration != "" || node.TimeDate != "" || node.TimeCycle != "" {
+		// It's a Timer Event
+		tokenID := uuid.New().String()
+
+		// Attempt to calculate due date (naive implementation for PT1M, etc)
+		var dueAt *time.Time
+		if node.TimeDuration != "" {
+			// Mock parsing duration: Assuming PT1M format
+			d, err := time.ParseDuration(strings.Replace(strings.ToLower(node.TimeDuration), "pt", "", 1))
+			if err == nil {
+				t := time.Now().Add(d)
+				dueAt = &t
+			}
+		}
+
+		newTask := models.ProcessRequestToken{
+			ID:               tokenID,
+			ProcessID:        r.ProcessID,
+			ProcessRequestID: r.RequestID,
+			UserID:           r.UserID,
+			ElementID:        node.ID,
+			ElementName:      node.Name,
+			ElementType:      string(node.Type),
+			Status:           "WAITING_TIMER",
+			DueAt:            dueAt,
+		}
+
+		if err := database.DB.Create(&newTask).Error; err != nil {
+			log.Printf("[engine] Failed to create timer token %s: %v", node.ID, err)
+		} else {
+			log.Printf("[engine] ⏳ Timer token %s set to wake at %s", tokenID[:8], dueAt)
+		}
+
+		return // Stop engine logic until timer hits
+	}
+
+	// For Message/Signal just wait
+	tokenID := uuid.New().String()
+	newTask := models.ProcessRequestToken{
+		ID:               tokenID,
+		ProcessID:        r.ProcessID,
+		ProcessRequestID: r.RequestID,
+		UserID:           r.UserID,
+		ElementID:        node.ID,
+		ElementName:      node.Name,
+		ElementType:      string(node.Type),
+		Status:           "WAITING_SIGNAL",
+	}
+	database.DB.Create(&newTask)
+	log.Printf("[engine] ⚠️ Waiting for signal token %s", tokenID[:8])
 }
 
 func (r *TokenRunner) handleEndEvent() {

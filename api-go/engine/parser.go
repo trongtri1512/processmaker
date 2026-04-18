@@ -59,6 +59,14 @@ type IntermediateCatchEvent struct {
 	Name     string   `xml:"name,attr"`
 	Incoming []string `xml:"incoming"`
 	Outgoing []string `xml:"outgoing"`
+	// BPMN Timer Event
+	TimerEventDefinition *TimerEventDefinition `xml:"timerEventDefinition"`
+}
+
+type TimerEventDefinition struct {
+	TimeDuration string `xml:"timeDuration"`
+	TimeDate     string `xml:"timeDate"`
+	TimeCycle    string `xml:"timeCycle"`
 }
 
 type IntermediateThrowEvent struct {
@@ -213,6 +221,10 @@ type NodeInfo struct {
 	// ScriptTask-specific
 	Script       string
 	ScriptFormat string
+	// Timer-specific
+	TimeDuration string
+	TimeDate     string
+	TimeCycle    string
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -264,7 +276,13 @@ func BuildNodeMap(proc *BProcess) map[string]*NodeInfo {
 		m[e.ID] = &NodeInfo{ID: e.ID, Name: e.Name, Type: NodeInclusiveGateway, Incoming: e.Incoming, Outgoing: e.Outgoing, DefaultFlow: e.Default}
 	}
 	for _, e := range proc.IntermediateCatchEvents {
-		m[e.ID] = &NodeInfo{ID: e.ID, Name: e.Name, Type: NodeIntermediateCatchEvent, Incoming: e.Incoming, Outgoing: e.Outgoing}
+		node := &NodeInfo{ID: e.ID, Name: e.Name, Type: NodeIntermediateCatchEvent, Incoming: e.Incoming, Outgoing: e.Outgoing}
+		if e.TimerEventDefinition != nil {
+			node.TimeDuration = e.TimerEventDefinition.TimeDuration
+			node.TimeDate = e.TimerEventDefinition.TimeDate
+			node.TimeCycle = e.TimerEventDefinition.TimeCycle
+		}
+		m[e.ID] = node
 	}
 	for _, e := range proc.IntermediateThrowEvents {
 		m[e.ID] = &NodeInfo{ID: e.ID, Name: e.Name, Type: NodeIntermediateThrowEvent, Incoming: e.Incoming, Outgoing: e.Outgoing}
