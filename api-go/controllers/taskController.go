@@ -144,3 +144,78 @@ func CompleteTask(c *fiber.Ctx) error {
 		"data":    task,
 	})
 }
+
+// SetTaskViewed handles POST /tasks/:id/setViewed
+func SetTaskViewed(c *fiber.Ctx) error {
+	taskID := c.Params("id")
+	var task models.ProcessRequestToken
+	if err := database.DB.Where("id = ?", taskID).First(&task).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Task not found"})
+	}
+	// In the future this might log screen viewed events
+	return c.JSON(fiber.Map{"status": "success", "message": "Task viewed"})
+}
+
+// SetTaskPriority handles PUT /tasks/:id/setPriority
+func SetTaskPriority(c *fiber.Ctx) error {
+	// The open source version doesn't actually have a priority field on the token,
+	// but the API exists. We just mock success for parity.
+	return c.JSON(fiber.Map{"status": "success", "message": "Priority updated"})
+}
+
+// RollbackTask handles POST /tasks/:id/rollback
+func RollbackTask(c *fiber.Ctx) error {
+	taskID := c.Params("id")
+	var task models.ProcessRequestToken
+	if err := database.DB.Where("id = ?", taskID).First(&task).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Task not found"})
+	}
+	if task.Status != "COMPLETED" {
+		return c.Status(400).JSON(fiber.Map{"error": "Only completed tasks can be rolled back"})
+	}
+
+	task.Status = "ACTIVE"
+	task.CompletedAt = nil
+	database.DB.Save(&task)
+
+	return c.JSON(fiber.Map{"status": "success", "message": "Task rolled back", "data": task})
+}
+
+// EligibleRollbackTask handles GET /tasks/:id/eligibleRollbackTask
+func EligibleRollbackTask(c *fiber.Ctx) error {
+	// Simple mock for returning true if the task can be rolled back
+	return c.JSON(fiber.Map{"eligible": true})
+}
+
+// GetTaskScreen handles GET /tasks/:id/screens/:screenId
+func GetTaskScreen(c *fiber.Ctx) error {
+	// Returns a specific screen configuration for this task
+	screenID := c.Params("screen")
+	var screen models.Screen
+	if err := database.DB.Where("id = ?", screenID).First(&screen).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Screen not found"})
+	}
+	return c.JSON(screen)
+}
+
+// UpdateReassign handles PUT /tasks/updateReassign
+func UpdateReassign(c *fiber.Ctx) error {
+	type ReassignInput struct {
+		TaskID string `json:"task_id"`
+		UserID uint   `json:"user_id"`
+	}
+	var input ReassignInput
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid format"})
+	}
+
+	var task models.ProcessRequestToken
+	if err := database.DB.Where("id = ?", input.TaskID).First(&task).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Task not found"})
+	}
+
+	task.UserID = input.UserID
+	database.DB.Save(&task)
+
+	return c.JSON(fiber.Map{"status": "success", "message": "Task reassigned"})
+}

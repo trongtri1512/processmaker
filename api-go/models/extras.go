@@ -233,3 +233,29 @@ func (ProcessLaunchpad) TableName() string {
 	return "process_launchpad"
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Phase E: Files (Media)
+// ──────────────────────────────────────────────────────────────────────────────
+
+type Media struct {
+	ID               uint           `gorm:"primaryKey" json:"id"`
+	ModelType        string         `gorm:"column:model_type;size:255" json:"model_type"`
+	ModelID          string         `gorm:"column:model_id;size:36" json:"model_id"`
+	CollectionName   string         `gorm:"column:collection_name;size:255" json:"collection_name"`
+	Name             string         `gorm:"column:name;size:255" json:"name"`
+	FileName         string         `gorm:"column:file_name;size:255" json:"file_name"`
+	MimeType         string         `gorm:"column:mime_type;size:255" json:"mime_type,omitempty"`
+	Disk             string         `gorm:"column:disk;size:255" json:"disk"`
+	Size             int64          `gorm:"column:size" json:"size"`
+	Manipulations    string         `gorm:"column:manipulations;type:json" json:"manipulations,omitempty"`
+	CustomProperties string         `gorm:"column:custom_properties;type:json" json:"custom_properties,omitempty"`
+	ResponsiveImages string         `gorm:"column:responsive_images;type:json" json:"responsive_images,omitempty"`
+	OrderColumn      int            `gorm:"column:order_column" json:"order_column,omitempty"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (Media) TableName() string {
+	return "media"
+}

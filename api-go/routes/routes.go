@@ -133,14 +133,32 @@ func Setup(app *fiber.App) {
 	p.Get("/script_executors/available-languages", controllers.GetScriptExecutorLanguages)
 	p.Put("/script_executors/:id", controllers.UpdateScriptExecutor)
 
-	// ── Phase 2/E: Tasks ─────────────────────────────────────────────────
+	// ── Phase E1: Tasks ──────────────────────────────────────────────────
 	p.Get("/tasks", controllers.GetTasks)
 	p.Get("/tasks/:id", controllers.GetTask)
-	p.Put("/tasks/:id", controllers.CompleteTask)
+	p.Put("/tasks/:id", controllers.CompleteTask) // Note: original is PUT
+	p.Post("/tasks/:id/setViewed", controllers.SetTaskViewed)
+	p.Put("/tasks/:id/setPriority", controllers.SetTaskPriority)
+	p.Post("/tasks/:id/rollback", controllers.RollbackTask)
+	p.Get("/tasks/:id/eligibleRollbackTask", controllers.EligibleRollbackTask)
+	p.Get("/tasks/:id/screens/:screen", controllers.GetTaskScreen)
+	p.Put("/tasks/updateReassign", controllers.UpdateReassign)
 
-	// ── Phase 2/E: Requests ──────────────────────────────────────────────
+	// ── Phase E2: Requests ───────────────────────────────────────────────
 	p.Get("/requests", controllers.GetRequests)
 	p.Get("/requests/:id", controllers.GetRequest)
+	p.Put("/requests/:id", controllers.UpdateRequest)
+	p.Delete("/requests/:id", controllers.DeleteRequest)
+	p.Put("/requests/:id/retry", controllers.RetryRequest)
+	p.Get("/requests/:id/tokens", controllers.GetRequestTokens)
+	p.Get("/requests/:id/details-screen-request", controllers.GetRequestDetailsScreen)
+	p.Get("/requests/:id/end-event-destination", controllers.GetRequestEndEventDestination)
+	
+	// ── Phase E2.1: Request Files ────────────────────────────────────────
+	p.Get("/requests/:id/files", controllers.GetRequestFiles)
+	p.Post("/requests/:id/files", controllers.UploadRequestFile)
+	p.Get("/requests/:id/files/:file", controllers.GetRequestFile)
+	p.Delete("/requests/:id/files/:file", controllers.DeleteRequestFile)
 
 	// ── Phase E3: Comments ───────────────────────────────────────────────
 	p.Get("/comments", controllers.GetComments)
