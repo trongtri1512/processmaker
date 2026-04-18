@@ -1,0 +1,87 @@
+#sidebar {
+  width: 58px;
+  min-width: 58px;
+  overflow-y: auto;
+}
+#sidebar.sidebar-custom {
+  background-color: #2773F3;
+}
+#sidebar.sidebar-default {
+  background-color: #20242A;
+}
+#sidebar #custom_icon {
+  max-width: 24px;
+  max-height: 22px;
+  min-width: 24px;
+}
+#sidebar.expanded {
+  width: 250px;
+  min-width: 250px;
+}
+#sidebar.expanded #custom_icon {
+  max-width: 24px;
+  max-height: 24px;
+  min-width: 24px;
+  margin-right: 7px;
+  margin-left: -3px;
+}
+#sidebar .section {
+  font-size: 12px;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  margin-left: 16px;
+  margin-top: 16px;
+}
+#sidebar .nav-link {
+  font-size: 14px;
+  color: #FFFFFF;
+  height: 43px;
+}
+#sidebar .nav-link .nav-icon {
+  color: inherit;
+}
+#sidebar .nav-link .nav-icon.custom-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-color: currentColor;
+}
+#sidebar .nav-link .nav-icon svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  stroke: currentColor;
+}
+#sidebar .logo {
+  margin: 16px 16px 24px 9px;
+}
+#sidebar .logo img {
+  height: 40px;
+  width: 150px;
+}
+#sidebar .nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+#sidebar .nav-icon {
+  min-width: 24px;
+  font-size: 18px;
+}
+
+#sidebar .closed .nav-item {
+  text-align: center;
+}
+#sidebar .closed .nav-link {
+  font-size: 18px;
+  color: #FFFFFF;
+}
+#sidebar .closed .logo-closed {
+  margin: 16px auto 24px auto;
+}
+#sidebar .closed .logo-closed img {
+  margin: 0px 9px;
+  height: 40px;
+  width: 40px;
+}
+#sidebar .closed .nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
