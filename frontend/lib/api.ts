@@ -1,10 +1,10 @@
 import axios from "axios";
 
-// Server-side: call api container directly via internal Docker network
+// Server-side: call Go API container directly via internal Docker network
 // Client-side: call via /laravel proxy (Next.js rewrites)
 const isServer = typeof window === "undefined";
 const baseURL = isServer
-  ? `${process.env.LARAVEL_INTERNAL_URL || "http://api:80"}/api/1.0`
+  ? `${process.env.GO_INTERNAL_URL || process.env.LARAVEL_INTERNAL_URL || "http://api-go:3000"}/api/1.0`
   : `/laravel/api/1.0`;
 
 export const apiClient = axios.create({
@@ -13,24 +13,9 @@ export const apiClient = axios.create({
   withCredentials: false,
 });
 
-// Interceptor to redirect specific endpoints to Go backend (High Performance)
-const goEndpoints = ["/tasks", "/requests", "/users", "/groups"];
-const goInternalURL = process.env.GO_INTERNAL_URL || "http://api-go:3000";
-
-const routeToGoIfRequired = (config: any) => {
-  if (isServer && config.url) {
-    if (goEndpoints.some((endpoint) => config.url.startsWith(endpoint))) {
-      config.baseURL = `${goInternalURL}/api/1.0`;
-    }
-  }
-  return config;
-};
-
-apiClient.interceptors.request.use(routeToGoIfRequired);
-
 // Attach auth token (call this from server components with session token)
 export function createAuthClient(token: string) {
-  const client = axios.create({
+  return axios.create({
     baseURL,
     headers: {
       Accept: "application/json",
@@ -38,10 +23,6 @@ export function createAuthClient(token: string) {
       Authorization: `Bearer ${token}`,
     },
   });
-  
-  client.interceptors.request.use(routeToGoIfRequired);
-  
-  return client;
 }
 
 // ─── Typed API helpers ────────────────────────────────────────────────────────
@@ -58,7 +39,7 @@ export const api = {
     show: (client: ReturnType<typeof createAuthClient>, id: string) =>
       client.get(`/users/${id}`),
     me: (client: ReturnType<typeof createAuthClient>) =>
-      client.get("/users/me"),
+      client.get("/me"),
   },
 
   // Tasks
@@ -95,24 +76,6 @@ export const api = {
       client.get("/processes", { params }),
     show: (client: ReturnType<typeof createAuthClient>, id: string) =>
       client.get(`/processes/${id}`),
-    startEvents: (client: ReturnType<typeof createAuthClient>, id: string) =>
-      client.get(`/process_bookmarks/processes/${id}/start_events`),
-  },
-
-  // Notifications
-  notifications: {
-    list: (client: ReturnType<typeof createAuthClient>, params?: object) =>
-      client.get("/notifications", { params }),
-    readAll: (client: ReturnType<typeof createAuthClient>) =>
-      client.put("/read_all_notifications", {}),
-  },
-
-  // Comments
-  comments: {
-    list: (client: ReturnType<typeof createAuthClient>, params?: object) =>
-      client.get("/comments", { params }),
-    store: (client: ReturnType<typeof createAuthClient>, data: object) =>
-      client.post("/comments", data),
   },
 
   // Groups

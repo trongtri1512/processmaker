@@ -14,7 +14,7 @@ import (
 
 var publicKey *rsa.PublicKey
 
-// LoadPublicKey reads the Laravel Passport public key
+// LoadPublicKey reads the RSA public key for validating JWT tokens
 func LoadPublicKey(path string) error {
 	keyBytes, err := os.ReadFile(path)
 	if err != nil {
@@ -29,7 +29,8 @@ func LoadPublicKey(path string) error {
 	return nil
 }
 
-// Protected route middleware checks Laravel Passport Personal Access Tokens (JWT)
+// Protected returns a middleware that validates JWT tokens.
+// Supports both RSA (Laravel Passport compatible) and HMAC (Go-native) tokens.
 func Protected() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
@@ -41,13 +42,11 @@ func Protected() fiber.Handler {
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-		// Parse the JWT token using the loaded public key
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return publicKey, nil
-		})
+		// Try RSA first (Laravel Passport tokens), then HMAC (Go-issued tokens)
+		token, err := parseTokenRSA(tokenString)
+		if err != nil {
+			token, err = parseTokenHMAC(tokenString)
+		}
 
 		if err != nil || !token.Valid {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -62,30 +61,59 @@ func Protected() fiber.Handler {
 			})
 		}
 
-		// Passport custom claim struct usually has "sub" (subject) as string user ID
-		sub, ok := claims["sub"].(string)
-		if !ok {
+		// Extract user ID from "sub" claim (can be string or float64)
+		var userID interface{}
+		sub := claims["sub"]
+		switch v := sub.(type) {
+		case string:
+			userID = v
+		case float64:
+			userID = uint(v)
+		default:
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Token 'sub' claim is missing or invalid",
 			})
 		}
 
-		// Query the database to ensure the user exists and active
+		// Query the database
 		var user models.User
-		if err := database.DB.Where("id = ? AND status = ?", sub, "ACTIVE").First(&user).Error; err != nil {
+		if err := database.DB.Where("id = ? AND status = ?", userID, "ACTIVE").First(&user).Error; err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "User account inactive or not found",
 			})
 		}
 
-		// Attach user to Fiber Context
 		c.Locals("user", user)
-
 		return c.Next()
 	}
 }
 
-// AdminOnly middleware verifies that the authenticated user has is_administrator = true
+func parseTokenRSA(tokenString string) (*jwt.Token, error) {
+	if publicKey == nil {
+		return nil, fmt.Errorf("no RSA public key loaded")
+	}
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return publicKey, nil
+	})
+}
+
+func parseTokenHMAC(tokenString string) (*jwt.Token, error) {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "processmaker-go-dev-secret"
+	}
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	})
+}
+
+// AdminOnly middleware verifies the user has is_administrator = true
 func AdminOnly() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user, ok := c.Locals("user").(models.User)

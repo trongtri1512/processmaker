@@ -2,51 +2,7 @@ version: '3.8'
 
 services:
 
-  # ─── Laravel API (PHP-FPM + Nginx + Horizon + Reverb via Supervisor) ─────────
-  api:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
-    container_name: processmaker_api
-    restart: unless-stopped
-    environment:
-      # App
-      APP_URL: ${APP_URL:-http://localhost}
-      APP_ENV: production
-      APP_DEBUG: "false"
-      # Database
-      DB_CONNECTION: mysql
-      DB_HOST: db
-      DB_PORT: "3306"
-      DB_DATABASE: processmaker
-      DB_USERNAME: processmaker
-      DB_PASSWORD: secret
-      # Redis
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: "null"
-      REDIS_CLIENT: phpredis
-      # Drivers
-      BROADCAST_DRIVER: redis
-      CACHE_DRIVER: redis
-      QUEUE_CONNECTION: redis
-      SESSION_DRIVER: redis
-      PROXIES: "*"
-      # ProcessMaker admin (first-run only)
-      PM_ADMIN_USERNAME: ${PM_ADMIN_USERNAME:-admin}
-      PM_ADMIN_PASSWORD: ${PM_ADMIN_PASSWORD:-processmaker2024!}
-      PM_ADMIN_EMAIL: ${PM_ADMIN_EMAIL:-admin@processmaker.local}
-      PM_ADMIN_FIRST_NAME: ${PM_ADMIN_FIRST_NAME:-Admin}
-      PM_ADMIN_LAST_NAME: ${PM_ADMIN_LAST_NAME:-User}
-    volumes:
-      - pm_storage:/var/www/html/storage
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  # ─── Go API (High-performance API) ───────────────────────────────────────────
+  # ─── Go API (BPMN Engine - replaces Laravel API) ────────────────────────────
   api-go:
     build:
       context: ./api-go
@@ -60,6 +16,8 @@ services:
       DB_DATABASE: processmaker
       DB_USERNAME: processmaker
       DB_PASSWORD: secret
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-processmaker-go-secret-key}
     volumes:
       - pm_storage:/var/www/html/storage
     depends_on:
@@ -74,15 +32,16 @@ services:
     container_name: processmaker_frontend
     restart: unless-stopped
     environment:
-      # Internal URL to call the api container on Docker network
-      LARAVEL_INTERNAL_URL: http://api:80
-      # Public API URL (rewritten by Next.js for client-side calls)
+      # All API calls now go to Go API
+      GO_INTERNAL_URL: http://api-go:3000
+      LARAVEL_INTERNAL_URL: http://api-go:3000
+      # Public API URL
       NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost}
       # NextAuth
       NEXTAUTH_URL: ${APP_URL:-http://localhost}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-super-secret-nextauth-key-change-me}
     depends_on:
-      - api
+      - api-go
 
   # ─── MySQL ───────────────────────────────────────────────────────────────────
   db:
@@ -102,7 +61,7 @@ services:
       timeout: 5s
       retries: 12
 
-  # ─── Redis ───────────────────────────────────────────────────────────────────
+  # ─── Redis (for future WebSocket / queues) ──────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: processmaker_redis

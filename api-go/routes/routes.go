@@ -9,33 +9,45 @@ import (
 func Setup(app *fiber.App) {
 	api := app.Group("/api/1.0")
 
+	// ── Health Check ─────────────────────────────────────────────────────
 	api.Get("/ping", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"message": "pong from Go API",
+			"message": "pong from Go BPMN Engine",
+			"engine":  "ProcessMaker Go v1.0",
 			"status":  "success",
 		})
 	})
 
-	// Protected routes
+	// ── Public Routes (No Auth) ──────────────────────────────────────────
+	api.Post("/login", controllers.Login)
+
+	// ── Protected Routes ─────────────────────────────────────────────────
 	protected := api.Group("/", middleware.Protected())
 
+	// Auth
 	protected.Get("/me", func(c *fiber.Ctx) error {
 		user := c.Locals("user")
-		return c.JSON(fiber.Map{
-			"status": "success",
-			"user":   user,
-		})
+		return c.JSON(fiber.Map{"status": "success", "user": user})
 	})
 
-	// Phase 2: Read-Heavy APIs
+	// Tasks
 	protected.Get("/tasks", controllers.GetTasks)
+	protected.Get("/tasks/:id", controllers.GetTask)
 	protected.Put("/tasks/:id", controllers.CompleteTask)
-	protected.Get("/requests", controllers.GetRequests)
-	
-	// Phase 2: User APIs
-	protected.Get("/users", controllers.GetUsers)
-	protected.Get("/groups", controllers.GetGroups)
 
-	// Phase 4: Engine APIs
+	// Requests
+	protected.Get("/requests", controllers.GetRequests)
+	protected.Get("/requests/:id", controllers.GetRequest)
+
+	// Processes
+	protected.Get("/processes", controllers.GetProcesses)
+	protected.Get("/processes/:id", controllers.GetProcess)
 	protected.Post("/processes/:id/events/:eventId", controllers.StartProcess)
+
+	// Users
+	protected.Get("/users", controllers.GetUsers)
+	protected.Get("/users/:id", controllers.GetUser)
+
+	// Groups
+	protected.Get("/groups", controllers.GetGroups)
 }

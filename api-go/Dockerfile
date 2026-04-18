@@ -1,10 +1,13 @@
 # Build Stage
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
 # Install git and certificates
 RUN apk add --no-cache git ca-certificates tzdata
+
+# Use auto toolchain to handle go.mod version requirements
+ENV GOTOOLCHAIN=auto
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
