@@ -11,13 +11,13 @@ ENV GOTOOLCHAIN=auto
 
 
 # Copy go mod and sum files
-COPY go.mod go.sum ./
+COPY api-go/go.mod api-go/go.sum ./
 
 # Download dependencies
 RUN go mod download
 
 # Copy source code
-COPY . .
+COPY api-go/ .
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
@@ -32,6 +32,9 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /app/main .
 COPY --from=builder /app/views ./views
+
+# Copy public assets into the container so it's fully standalone
+COPY public ./public
 
 # Expose port
 EXPOSE 3000

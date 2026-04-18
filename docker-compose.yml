@@ -5,8 +5,8 @@ services:
   # ─── Go API (BPMN Engine - replaces Laravel API) ────────────────────────────
   api-go:
     build:
-      context: ./api-go
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api-go/Dockerfile
     container_name: processmaker_api_go
     restart: unless-stopped
     environment:
