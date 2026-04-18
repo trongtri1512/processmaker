@@ -9,6 +9,7 @@ RUN apk add --no-cache git ca-certificates tzdata
 # Use auto toolchain to handle go.mod version requirements
 ENV GOTOOLCHAIN=auto
 
+
 # Copy go mod and sum files
 COPY go.mod go.sum ./
 
