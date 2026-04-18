@@ -24,24 +24,9 @@ services:
       db:
         condition: service_healthy
 
-  # ─── Next.js Frontend ─────────────────────────────────────────────────────────
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: processmaker_frontend
-    restart: unless-stopped
-    environment:
-      # All API calls now go to Go API
-      GO_INTERNAL_URL: http://api-go:3000
-      LARAVEL_INTERNAL_URL: http://api-go:3000
-      # Public API URL
-      NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost}
-      # NextAuth
-      NEXTAUTH_URL: ${APP_URL:-http://localhost}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-super-secret-nextauth-key-change-me}
-    depends_on:
-      - api-go
+    # Open port 80 to map to 3000 of Go App
+    ports:
+      - "80:3000"
 
   # ─── MySQL ───────────────────────────────────────────────────────────────────
   db:

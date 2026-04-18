@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="app-url" content="http://localhost:3000">
+    <meta name="is-prod" content="false">
+    
+    {{if .User}}
+    <meta name="user-id" content="{{.User.ID}}">
+    <meta name="user-full-name" content="{{.User.FullName}}">
+    {{end}}
+
+    <title>{{.Title}} - ProcessMaker (Golang POC)</title>
+    
+    <link href="/css/app.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/tailwind.css" rel="stylesheet">
+
+    <script type="text/javascript">
+      window.Processmaker = {
+        apiTimeout: 30000,
+        messages: [],
+        notificationMessages: {}
+      };
+      // For Vue app compilation
+      window.ProcessMaker = window.Processmaker;
+      
+      // MOCK: Intercept axios request to inject JWT
+      window.addEventListener('load', function() {
+          if (window.ProcessMaker.apiClient) {
+              window.ProcessMaker.apiClient.interceptors.request.use(function (config) {
+                  let token = localStorage.getItem('bearer_token');
+                  if (token) {
+                      config.headers.Authorization = 'Bearer ' + token;
+                  }
+                  return config;
+              });
+          }
+      });
+    </script>
+</head>
+<body>
+<div class="d-flex w-100 mw-100 h-100 mh-100" id="app-container">
+  
+  <div id="sidebar" class="d-none invisible">
+    <!-- Go API currently does not render sidebar logic for POC -->
+  </div>
+  
+  <div class="d-flex flex-grow-1 flex-column overflow-hidden">
+    <div class="flex-grow-1 d-flex flex-column overflow-hidden h-100" id="mainbody">
+      <div id="main" class="main flex-grow-1 h-100 overflow-auto py-3">
+          {{embed}}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="/js/manifest.js"></script>
+<script src="/js/vue-vendor.js"></script>
+<script src="/js/bootstrap-vendor.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/app-layout.js"></script>
+</body>
+</html>

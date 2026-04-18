@@ -13,6 +13,7 @@ import (
 	"github.com/trongtri1512/processmaker-go/database"
 	"github.com/trongtri1512/processmaker-go/middleware"
 	"github.com/trongtri1512/processmaker-go/routes"
+	"github.com/gofiber/template/html/v2"
 )
 
 func main() {
@@ -45,10 +46,12 @@ func main() {
 	} else {
 		log.Println("✅ Loaded RSA Private Key")
 	}
+	engine := html.New("./views", ".html")
 
 	app := fiber.New(fiber.Config{
 		AppName:   "ProcessMaker Go API v1.0",
 		BodyLimit: 50 * 1024 * 1024, // 50 MB
+		Views:     engine,
 	})
 
 	// Middleware

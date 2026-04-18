@@ -1,0 +1,14 @@
+<div class="page-content mb-0" id="processIndex">
+  <div class="container-fluid">
+      <!-- MOCK: Thẻ của VueJS -->
+      <processes-listing
+          ref="processListing"
+          status="{{ .Config.status }}"
+          :current-user-id="1"
+          :permission="{}"
+      ></processes-listing>
+  </div>
+</div>
+
+<!-- Load file script chứa Vue root (tương đương @section('js') của blade) -->
+<script src="/js/processes/index.js"></script>
