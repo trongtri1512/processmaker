@@ -29,6 +29,7 @@ func Setup(app *fiber.App) {
 
 	// Phase 2: Read-Heavy APIs
 	protected.Get("/tasks", controllers.GetTasks)
+	protected.Put("/tasks/:id", controllers.CompleteTask)
 	protected.Get("/requests", controllers.GetRequests)
 	
 	// Phase 2: User APIs
