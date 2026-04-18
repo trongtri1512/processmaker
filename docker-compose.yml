@@ -24,9 +24,9 @@ services:
       db:
         condition: service_healthy
 
-    # Open port 80 to map to 3000 of Go App
+    # Open port 88 to map to 3000 of Go App
     ports:
-      - "80:3000"
+      - "88:3000"
 
   # ─── MySQL ───────────────────────────────────────────────────────────────────
   db:
