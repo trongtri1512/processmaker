@@ -42,15 +42,19 @@ func Setup(app *fiber.App) {
 	p.Put("/groups/:id", controllers.UpdateGroup)
 	p.Delete("/groups/:id", controllers.DeleteGroup)
 	p.Get("/groups/:id/users", controllers.GetGroupUsers)
+	p.Get("/groups/:id/groups", controllers.GetGroupSubGroups)
 
 	// ── Phase A: Group Members ───────────────────────────────────────────
 	p.Get("/group_members", controllers.GetGroupMembers)
 	p.Get("/group_members/:id", controllers.GetGroupMember)
 	p.Post("/group_members", controllers.AddGroupMember)
 	p.Delete("/group_members/:id", controllers.RemoveGroupMember)
+	p.Get("/group_members_available", controllers.GroupsAvailable)
+	p.Get("/user_members_available", controllers.UsersAvailable)
 
 	// ── Phase A: Permissions ─────────────────────────────────────────────
 	p.Get("/permissions", controllers.GetPermissions)
+	p.Put("/permissions", controllers.UpdatePermissions)
 
 	// ── Phase B: Processes ───────────────────────────────────────────────
 	p.Get("/processes", controllers.GetProcesses)

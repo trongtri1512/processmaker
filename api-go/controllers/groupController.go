@@ -203,6 +203,108 @@ func RemoveGroupMember(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "success", "message": "Member removed"})
 }
 
+// GetGroupSubGroups handles GET /groups/:id/groups
+// Returns sub-groups that are members of this group.
+func GetGroupSubGroups(c *fiber.Ctx) error {
+	groupID := c.Params("id")
+
+	var members []models.GroupMember
+	database.DB.Where("group_id = ? AND member_type = ?", groupID, "ProcessMaker\\Models\\Group").Find(&members)
+
+	var groupIDs []uint
+	for _, m := range members {
+		groupIDs = append(groupIDs, m.MemberID)
+	}
+
+	if len(groupIDs) == 0 {
+		return c.JSON(fiber.Map{"data": []interface{}{}})
+	}
+
+	var groups []models.Group
+	database.DB.Where("id IN ?", groupIDs).Find(&groups)
+	return c.JSON(fiber.Map{"data": groups})
+}
+
+// GroupsAvailable handles GET /group_members_available
+// Returns all ACTIVE groups NOT already assigned to the given member.
+func GroupsAvailable(c *fiber.Ctx) error {
+	memberID := c.Query("member_id", "")
+	memberType := c.Query("member_type", "")
+	groupID := c.Query("group_id", "")
+	filter := c.Query("filter", "")
+
+	// Get already-assigned group IDs
+	var assignedIDs []uint
+	if groupID != "" {
+		// Groups that are sub-members of this group
+		var members []models.GroupMember
+		database.DB.Where("group_id = ? AND member_type = ?", groupID, "ProcessMaker\\Models\\Group").Find(&members)
+		for _, m := range members {
+			assignedIDs = append(assignedIDs, m.MemberID)
+		}
+		gid, _ := strconv.Atoi(groupID)
+		assignedIDs = append(assignedIDs, uint(gid)) // Exclude self
+	} else if memberID != "" && memberType != "" {
+		var members []models.GroupMember
+		database.DB.Where("member_id = ? AND member_type = ?", memberID, memberType).Find(&members)
+		for _, m := range members {
+			assignedIDs = append(assignedIDs, m.GroupID)
+		}
+	}
+
+	query := database.DB.Model(&models.Group{}).Where("status = ?", "ACTIVE")
+	if len(assignedIDs) > 0 {
+		query = query.Where("id NOT IN ?", assignedIDs)
+	}
+	if filter != "" {
+		query = query.Where("name LIKE ?", "%"+filter+"%")
+	}
+
+	var groups []models.Group
+	query.Order("name asc").Find(&groups)
+	return c.JSON(fiber.Map{"data": groups})
+}
+
+// UsersAvailable handles GET /user_members_available
+// Returns all active users NOT already a member of the given group.
+func UsersAvailable(c *fiber.Ctx) error {
+	groupID := c.Query("group_id", "")
+	filter := c.Query("filter", "")
+
+	var assignedIDs []uint
+	if groupID != "" {
+		var members []models.GroupMember
+		database.DB.Where("group_id = ? AND member_type = ?", groupID, "ProcessMaker\\Models\\User").Find(&members)
+		for _, m := range members {
+			assignedIDs = append(assignedIDs, m.MemberID)
+		}
+	}
+
+	query := database.DB.Model(&models.User{}).Where("status != ?", "INACTIVE")
+	if len(assignedIDs) > 0 {
+		query = query.Where("id NOT IN ?", assignedIDs)
+	}
+	if filter != "" {
+		f := "%" + filter + "%"
+		query = query.Where("firstname LIKE ? OR lastname LIKE ? OR username LIKE ?", f, f, f)
+	}
+
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	perPage, _ := strconv.Atoi(c.Query("per_page", "10"))
+	if page <= 0 { page = 1 }
+	if perPage <= 0 { perPage = 10 }
+
+	var total int64
+	var users []models.User
+	query.Count(&total)
+	query.Order("firstname asc").Offset((page-1)*perPage).Limit(perPage).Find(&users)
+
+	return c.JSON(fiber.Map{
+		"data": users,
+		"meta": paginationMeta(page, perPage, total),
+	})
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Permissions
 // ──────────────────────────────────────────────────────────────────────────────
@@ -210,6 +312,83 @@ func RemoveGroupMember(c *fiber.Ctx) error {
 // GetPermissions handles GET /permissions
 func GetPermissions(c *fiber.Ctx) error {
 	var perms []models.Permission
-	database.DB.Order("group asc, name asc").Find(&perms)
+	database.DB.Order("`group` asc, name asc").Find(&perms)
 	return c.JSON(fiber.Map{"data": perms})
 }
+
+// UpdatePermissions handles PUT /permissions
+// Syncs permission_names for a user or group via the `assignables` pivot table.
+func UpdatePermissions(c *fiber.Ctx) error {
+	type Input struct {
+		UserID          *uint    `json:"user_id"`
+		GroupID         *uint    `json:"group_id"`
+		IsAdministrator *bool    `json:"is_administrator"`
+		PermissionNames []string `json:"permission_names"`
+	}
+
+	var input Input
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	authUser := c.Locals("user").(models.User)
+
+	if input.UserID != nil {
+		// Update user permissions
+		var user models.User
+		if err := database.DB.First(&user, *input.UserID).Error; err != nil {
+			return c.Status(404).JSON(fiber.Map{"error": "User not found"})
+		}
+
+		// Handle is_administrator flag
+		if input.IsAdministrator != nil {
+			if !authUser.IsAdministrator {
+				return c.Status(403).JSON(fiber.Map{"error": "Only admins can modify admin privileges"})
+			}
+			database.DB.Model(&user).Update("is_administrator", *input.IsAdministrator)
+		}
+
+		// Sync permissions via assignables pivot table
+		syncPermissions(*input.UserID, "ProcessMaker\\Models\\User", input.PermissionNames)
+
+	} else if input.GroupID != nil {
+		// Update group permissions
+		var group models.Group
+		if err := database.DB.First(&group, *input.GroupID).Error; err != nil {
+			return c.Status(404).JSON(fiber.Map{"error": "Group not found"})
+		}
+
+		syncPermissions(*input.GroupID, "ProcessMaker\\Models\\Group", input.PermissionNames)
+	} else {
+		return c.Status(422).JSON(fiber.Map{"error": "user_id or group_id is required"})
+	}
+
+	return c.SendStatus(204)
+}
+
+// syncPermissions replaces all permission assignments for a given entity in the
+// `assignables` polymorphic pivot table.
+func syncPermissions(entityID uint, entityType string, permissionNames []string) {
+	// Delete existing
+	database.DB.Exec(
+		"DELETE FROM assignables WHERE assignable_id = ? AND assignable_type = ?",
+		entityID, entityType,
+	)
+
+	if len(permissionNames) == 0 {
+		return
+	}
+
+	// Find permission IDs
+	var perms []models.Permission
+	database.DB.Where("name IN ?", permissionNames).Find(&perms)
+
+	// Insert new assignments
+	for _, p := range perms {
+		database.DB.Exec(
+			"INSERT INTO assignables (permission_id, assignable_id, assignable_type) VALUES (?, ?, ?)",
+			p.ID, entityID, entityType,
+		)
+	}
+}
+
