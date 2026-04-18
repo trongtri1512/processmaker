@@ -91,15 +91,21 @@ func Setup(app *fiber.App) {
 	p.Delete("/process_launchpads/:id", controllers.DeleteLaunchpad)
 
 
-	// ── Phase C: Screens ─────────────────────────────────────────────────
+	// ── Phase C1: Screens ────────────────────────────────────────────────
 	p.Get("/screens", controllers.GetScreens)
 	p.Get("/screens/:id", controllers.GetScreen)
 	p.Post("/screens", controllers.CreateScreen)
 	p.Put("/screens/:id", controllers.UpdateScreen)
 	p.Delete("/screens/:id", controllers.DeleteScreen)
+	p.Put("/screens/:id/draft", controllers.UpdateScreenDraft)
+	p.Post("/screens/:id/close", controllers.CloseScreen)
+	p.Put("/screens/:id/duplicate", controllers.DuplicateScreen)
+	p.Post("/screens/:id/export", controllers.ExportScreen)
+	p.Post("/screens/import", controllers.ImportScreen)
 
-	// ── Phase C: Screen Categories ───────────────────────────────────────
+	// ── Phase C2: Screen Categories ──────────────────────────────────────
 	p.Get("/screen_categories", controllers.GetScreenCategories)
+	p.Get("/screen_categories/:id", controllers.GetScreenCategory)
 	p.Post("/screen_categories", controllers.CreateScreenCategory)
 	p.Put("/screen_categories/:id", controllers.UpdateScreenCategory)
 	p.Delete("/screen_categories/:id", controllers.DeleteScreenCategory)

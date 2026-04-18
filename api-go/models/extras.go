@@ -29,12 +29,21 @@ type Screen struct {
 	Description string         `gorm:"type:text" json:"description,omitempty"`
 	Type        string         `gorm:"size:50;default:'FORM'" json:"type"`
 	Config      string         `gorm:"type:longtext" json:"config,omitempty"`
+	Computed    string         `gorm:"type:longtext" json:"computed,omitempty"`
+	Watchers    string         `gorm:"type:longtext" json:"watchers,omitempty"`
+	CustomCSS   string         `gorm:"column:custom_css;type:longtext" json:"custom_css,omitempty"`
 	Status      string         `gorm:"size:50;default:'ACTIVE'" json:"status"`
 	CategoryID  *uint          `gorm:"column:screen_category_id" json:"screen_category_id,omitempty"`
+	Key         string         `gorm:"column:key;size:255" json:"key,omitempty"`
+	Label       string         `gorm:"size:255" json:"label,omitempty"`
+	IsDefault   bool           `gorm:"column:is_default;default:false" json:"is_default"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+
+	// Relations
+	Category *ScreenCategory `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
 }
 
 func (Screen) TableName() string {

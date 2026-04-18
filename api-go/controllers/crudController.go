@@ -177,7 +177,7 @@ func DeleteProcessCategory(c *fiber.Ctx) error {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Phase C: Screens
+// Phase C1: Screens
 // ──────────────────────────────────────────────────────────────────────────────
 
 func GetScreens(c *fiber.Ctx) error {
@@ -189,14 +189,22 @@ func GetScreens(c *fiber.Ctx) error {
 	var total int64
 	query := database.DB.Model(&models.Screen{})
 	if s := c.Query("type", ""); s != "" { query = query.Where("type = ?", s) }
+	if s := c.Query("status", ""); s != "" { query = query.Where("status = ?", s) }
+	if s := c.Query("screen_category_id", ""); s != "" {
+		query = query.Where("screen_category_id = ?", s)
+	}
+	if s := c.Query("search", ""); s != "" {
+		f := "%" + s + "%"
+		query = query.Where("title LIKE ? OR description LIKE ?", f, f)
+	}
 	query.Count(&total)
-	query.Order("created_at desc").Offset((page-1)*perPage).Limit(perPage).Find(&items)
+	query.Preload("Category").Order("created_at desc").Offset((page-1)*perPage).Limit(perPage).Find(&items)
 	return c.JSON(fiber.Map{"data": items, "meta": paginationMeta(page, perPage, total)})
 }
 
 func GetScreen(c *fiber.Ctx) error {
 	var item models.Screen
-	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+	if err := database.DB.Preload("Category").First(&item, c.Params("id")).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
 	}
 	return c.JSON(item)
@@ -205,6 +213,9 @@ func GetScreen(c *fiber.Ctx) error {
 func CreateScreen(c *fiber.Ctx) error {
 	var item models.Screen
 	c.BodyParser(&item)
+	if item.Title == "" {
+		return c.Status(422).JSON(fiber.Map{"error": "title is required"})
+	}
 	if item.Type == "" { item.Type = "FORM" }
 	if item.Status == "" { item.Status = "ACTIVE" }
 	database.DB.Create(&item)
@@ -220,6 +231,7 @@ func UpdateScreen(c *fiber.Ctx) error {
 	c.BodyParser(&updates)
 	delete(updates, "id")
 	database.DB.Model(&item).Updates(updates)
+	database.DB.First(&item, c.Params("id"))
 	return c.JSON(item)
 }
 
@@ -228,15 +240,122 @@ func DeleteScreen(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "success"})
 }
 
+// UpdateScreenDraft handles PUT /screens/:id/draft
+func UpdateScreenDraft(c *fiber.Ctx) error {
+	var item models.Screen
+	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	var updates map[string]interface{}
+	c.BodyParser(&updates)
+	// Store draft data - the frontend sends config/computed/watchers/custom_css
+	database.DB.Model(&item).Updates(updates)
+	return c.JSON(fiber.Map{"status": "success", "message": "Draft saved"})
+}
+
+// CloseScreen handles POST /screens/:id/close
+func CloseScreen(c *fiber.Ctx) error {
+	var item models.Screen
+	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	// Closing a screen just means the editing session is over
+	return c.JSON(fiber.Map{"status": "success", "message": "Screen closed"})
+}
+
+// DuplicateScreen handles PUT /screens/:id/duplicate
+func DuplicateScreen(c *fiber.Ctx) error {
+	var original models.Screen
+	if err := database.DB.First(&original, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+
+	type Input struct {
+		Title string `json:"title"`
+	}
+	var input Input
+	c.BodyParser(&input)
+	title := input.Title
+	if title == "" {
+		title = "Copy of " + original.Title
+	}
+
+	dup := models.Screen{
+		Title:       title,
+		Description: original.Description,
+		Type:        original.Type,
+		Config:      original.Config,
+		Computed:    original.Computed,
+		Watchers:    original.Watchers,
+		CustomCSS:   original.CustomCSS,
+		Status:      "ACTIVE",
+		CategoryID:  original.CategoryID,
+	}
+	database.DB.Create(&dup)
+	return c.Status(201).JSON(dup)
+}
+
+// ExportScreen handles POST /screens/:id/export
+func ExportScreen(c *fiber.Ctx) error {
+	var item models.Screen
+	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	export := fiber.Map{
+		"type":    "screen_package",
+		"version": "1.0",
+		"screen":  item,
+	}
+	return c.JSON(export)
+}
+
+// ImportScreen handles POST /screens/import
+func ImportScreen(c *fiber.Ctx) error {
+	type Payload struct {
+		Screen models.Screen `json:"screen"`
+	}
+	var payload Payload
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid import payload"})
+	}
+	payload.Screen.ID = 0 // Auto-increment
+	payload.Screen.Title = payload.Screen.Title + " (Imported)"
+	payload.Screen.Status = "ACTIVE"
+	database.DB.Create(&payload.Screen)
+	return c.Status(201).JSON(fiber.Map{
+		"status": "success",
+		"screen": payload.Screen,
+	})
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Phase C2: Screen Categories
+// ──────────────────────────────────────────────────────────────────────────────
+
 func GetScreenCategories(c *fiber.Ctx) error {
 	var items []models.ScreenCategory
-	database.DB.Order("name asc").Find(&items)
+	query := database.DB.Order("name asc")
+	if s := c.Query("status", ""); s != "" {
+		query = query.Where("status = ?", s)
+	}
+	query.Find(&items)
 	return c.JSON(fiber.Map{"data": items})
+}
+
+func GetScreenCategory(c *fiber.Ctx) error {
+	var item models.ScreenCategory
+	if err := database.DB.First(&item, c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	return c.JSON(item)
 }
 
 func CreateScreenCategory(c *fiber.Ctx) error {
 	var item models.ScreenCategory
 	c.BodyParser(&item)
+	if item.Name == "" {
+		return c.Status(422).JSON(fiber.Map{"error": "name is required"})
+	}
 	if item.Status == "" { item.Status = "ACTIVE" }
 	database.DB.Create(&item)
 	return c.Status(201).JSON(item)
@@ -249,6 +368,7 @@ func UpdateScreenCategory(c *fiber.Ctx) error {
 	}
 	var updates map[string]interface{}
 	c.BodyParser(&updates)
+	delete(updates, "id")
 	database.DB.Model(&item).Updates(updates)
 	return c.JSON(item)
 }
