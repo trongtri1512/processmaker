@@ -167,17 +167,29 @@ func Setup(app *fiber.App) {
 	p.Put("/comments/:id", controllers.UpdateComment)
 	p.Delete("/comments/:id", controllers.DeleteComment)
 
-	// ── Phase F: Notifications ───────────────────────────────────────────
+	// ── Phase F1: Notifications ──────────────────────────────────────────
 	p.Get("/notifications", controllers.GetNotifications)
-	p.Put("/notifications/:id", controllers.MarkNotificationRead)
+	p.Get("/notifications/:id", controllers.GetNotification)
+	p.Post("/notifications", controllers.CreateNotification)
+	p.Put("/notifications/:id", controllers.UpdateNotification)
+	p.Delete("/notifications/:id", controllers.DeleteNotification)
+	p.Put("/read_notifications", controllers.MarkNotificationsReadViaBody)
+	p.Put("/unread_notifications", controllers.MarkNotificationsUnreadViaBody)
 	p.Put("/read_all_notifications", controllers.ReadAllNotifications)
 
-	// ── Phase G: Settings ────────────────────────────────────────────────
+	// ── Phase F2: Settings ───────────────────────────────────────────────
 	p.Get("/settings", controllers.GetSettings)
+	p.Get("/settings/groups", controllers.GetSettingGroups)
+	p.Get("/settings/menu-groups", controllers.GetSettingMenuGroups)
+	p.Post("/settings/import", controllers.ImportSettings)
+	p.Post("/settings/upload-file", controllers.UploadSettingsFile)
+	p.Get("/settings/group/:group/buttons", controllers.GetSettingsGroupButtons)
+	p.Post("/settings", controllers.CreateSetting)
 	p.Get("/settings/:id", controllers.GetSetting)
 	p.Put("/settings/:id", controllers.UpdateSetting)
+	p.Delete("/settings/:id", controllers.DeleteSetting)
 
-	// ── Phase G: Environment Variables ───────────────────────────────────
+	// ── Phase F3: Environment Variables ──────────────────────────────────
 	p.Get("/environment_variables", controllers.GetEnvVars)
 	p.Get("/environment_variables/:id", controllers.GetEnvVar)
 	p.Post("/environment_variables", controllers.CreateEnvVar)

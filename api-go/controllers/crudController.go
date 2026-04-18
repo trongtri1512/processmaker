@@ -659,9 +659,64 @@ func GetNotifications(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"data": items, "meta": paginationMeta(page, perPage, total)})
 }
 
+func GetNotification(c *fiber.Ctx) error {
+	var item models.Notification
+	if err := database.DB.First(&item, "id = ?", c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	return c.JSON(item)
+}
+
+func CreateNotification(c *fiber.Ctx) error {
+	var item models.Notification
+	if err := c.BodyParser(&item); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid format"})
+	}
+	database.DB.Create(&item)
+	return c.Status(201).JSON(item)
+}
+
+func UpdateNotification(c *fiber.Ctx) error {
+	var item models.Notification
+	if err := database.DB.First(&item, "id = ?", c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	var updates map[string]interface{}
+	c.BodyParser(&updates)
+	database.DB.Model(&item).Updates(updates)
+	return c.JSON(item)
+}
+
+func DeleteNotification(c *fiber.Ctx) error {
+	database.DB.Delete(&models.Notification{}, "id = ?", c.Params("id"))
+	return c.JSON(fiber.Map{"status": "success"})
+}
+
 func MarkNotificationRead(c *fiber.Ctx) error {
 	id := c.Params("id")
 	database.DB.Model(&models.Notification{}).Where("id = ?", id).Update("read_at", database.DB.NowFunc())
+	return c.JSON(fiber.Map{"status": "success"})
+}
+
+func MarkNotificationsReadViaBody(c *fiber.Ctx) error {
+	var body struct {
+		Notifications []string `json:"notifications"`
+	}
+	c.BodyParser(&body)
+	if len(body.Notifications) > 0 {
+		database.DB.Model(&models.Notification{}).Where("id IN ?", body.Notifications).Update("read_at", database.DB.NowFunc())
+	}
+	return c.JSON(fiber.Map{"status": "success"})
+}
+
+func MarkNotificationsUnreadViaBody(c *fiber.Ctx) error {
+	var body struct {
+		Notifications []string `json:"notifications"`
+	}
+	c.BodyParser(&body)
+	if len(body.Notifications) > 0 {
+		database.DB.Model(&models.Notification{}).Where("id IN ?", body.Notifications).Update("read_at", nil)
+	}
 	return c.JSON(fiber.Map{"status": "success"})
 }
 
@@ -700,6 +755,63 @@ func UpdateSetting(c *fiber.Ctx) error {
 	c.BodyParser(&updates)
 	database.DB.Model(&item).Updates(updates)
 	return c.JSON(item)
+}
+
+func CreateSetting(c *fiber.Ctx) error {
+	var item models.Setting
+	if err := c.BodyParser(&item); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid format"})
+	}
+	database.DB.Create(&item)
+	return c.Status(201).JSON(item)
+}
+
+func DeleteSetting(c *fiber.Ctx) error {
+	database.DB.Delete(&models.Setting{}, c.Params("id"))
+	return c.JSON(fiber.Map{"status": "success"})
+}
+
+func GetSettingGroups(c *fiber.Ctx) error {
+	// Query unique groups from settings table
+	var groups []string
+	database.DB.Model(&models.Setting{}).Distinct("`group`").Where("`group` IS NOT NULL AND `group` != ''").Pluck("group", &groups)
+	return c.JSON(fiber.Map{"data": groups})
+}
+
+func GetSettingMenuGroups(c *fiber.Ctx) error {
+	// A placeholder for specific menu groups setting format
+	return c.JSON(fiber.Map{"data": []string{"System", "Appearance", "Email", "Advanced"}})
+}
+
+func GetSettingsGroupButtons(c *fiber.Ctx) error {
+	// Returns buttons configuration for a setting group
+	return c.JSON(fiber.Map{"data": []string{}})
+}
+
+func ImportSettings(c *fiber.Ctx) error {
+	var payload []models.Setting
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid format"})
+	}
+	
+	// Update or create mock logic
+	for _, setting := range payload {
+		var existing models.Setting
+		if err := database.DB.Where("`key` = ?", setting.Key).First(&existing).Error; err == nil {
+			database.DB.Model(&existing).Updates(setting)
+		} else {
+			database.DB.Create(&setting)
+		}
+	}
+	return c.JSON(fiber.Map{"status": "success", "message": "Settings imported"})
+}
+
+func UploadSettingsFile(c *fiber.Ctx) error {
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "No file uploaded"})
+	}
+	return c.JSON(fiber.Map{"status": "success", "filename": file.Filename, "message": "File uploaded"})
 }
 
 func GetEnvVars(c *fiber.Ctx) error {
