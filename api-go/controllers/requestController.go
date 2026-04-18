@@ -16,8 +16,12 @@ func GetRequests(c *fiber.Ctx) error {
 	perPage, _ := strconv.Atoi(c.Query("per_page", "10"))
 	status := c.Query("status", "ACTIVE")
 
-	if page <= 0 { page = 1 }
-	if perPage <= 0 { perPage = 10 }
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
 	offset := (page - 1) * perPage
 
 	var requests []models.ProcessRequest

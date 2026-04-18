@@ -24,8 +24,12 @@ func GetProcesses(c *fiber.Ctx) error {
 	status := c.Query("status", "ACTIVE")
 	search := c.Query("search", "")
 
-	if page <= 0 { page = 1 }
-	if perPage <= 0 { perPage = 10 }
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
 	offset := (page - 1) * perPage
 
 	var processes []models.Process
@@ -188,9 +192,9 @@ func ExportProcess(c *fiber.Ctx) error {
 	database.DB.Where("process_id = ?", process.ID).Find(&assignments)
 
 	export := fiber.Map{
-		"type":    "process_package",
-		"version": "1.0",
-		"process": process,
+		"type":             "process_package",
+		"version":          "1.0",
+		"process":          process,
 		"task_assignments": assignments,
 	}
 
@@ -201,8 +205,8 @@ func ExportProcess(c *fiber.Ctx) error {
 // Imports a process from a JSON export.
 func ImportProcess(c *fiber.Ctx) error {
 	type ImportPayload struct {
-		Process         models.Process                  `json:"process"`
-		TaskAssignments []models.ProcessTaskAssignment   `json:"task_assignments"`
+		Process         models.Process                 `json:"process"`
+		TaskAssignments []models.ProcessTaskAssignment `json:"task_assignments"`
 	}
 
 	var payload ImportPayload
@@ -221,7 +225,7 @@ func ImportProcess(c *fiber.Ctx) error {
 
 	// Re-link task assignments
 	for i := range payload.TaskAssignments {
-		payload.TaskAssignments[i].ID = 0 // Auto-increment
+		payload.TaskAssignments[i].ID = 0        // Auto-increment
 		payload.TaskAssignments[i].ProcessID = 0 // Will need to be set from UUID
 		database.DB.Create(&payload.TaskAssignments[i])
 	}

@@ -20,12 +20,20 @@ func Connect() {
 	dbName := os.Getenv("DB_DATABASE")
 
 	// Provide defaults if missing
-	if user == "" { user = "root" }
-	if host == "" { host = "127.0.0.1" }
-	if port == "" { port = "3306" }
-	if dbName == "" { dbName = "processmaker" }
+	if user == "" {
+		user = "root"
+	}
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	if port == "" {
+		port = "3306"
+	}
+	if dbName == "" {
+		dbName = "processmaker"
+	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", 
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		user, password, host, port, dbName)
 
 	var err error

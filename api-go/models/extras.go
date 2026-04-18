@@ -8,10 +8,10 @@ import (
 
 // ProcessCategory represents the `process_categories` table.
 type ProcessCategory struct {
-	ID       uint           `gorm:"primaryKey" json:"id"`
-	Name     string         `gorm:"size:255;not null" json:"name"`
-	Status   string         `gorm:"size:50;default:'ACTIVE'" json:"status"`
-	IsSystem bool           `gorm:"default:false" json:"is_system"`
+	ID       uint   `gorm:"primaryKey" json:"id"`
+	Name     string `gorm:"size:255;not null" json:"name"`
+	Status   string `gorm:"size:50;default:'ACTIVE'" json:"status"`
+	IsSystem bool   `gorm:"default:false" json:"is_system"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -24,19 +24,19 @@ func (ProcessCategory) TableName() string {
 
 // Screen represents the `screens` table.
 type Screen struct {
-	ID          uint           `gorm:"primaryKey" json:"id"`
-	Title       string         `gorm:"size:255;not null" json:"title"`
-	Description string         `gorm:"type:text" json:"description,omitempty"`
-	Type        string         `gorm:"size:50;default:'FORM'" json:"type"`
-	Config      string         `gorm:"type:longtext" json:"config,omitempty"`
-	Computed    string         `gorm:"type:longtext" json:"computed,omitempty"`
-	Watchers    string         `gorm:"type:longtext" json:"watchers,omitempty"`
-	CustomCSS   string         `gorm:"column:custom_css;type:longtext" json:"custom_css,omitempty"`
-	Status      string         `gorm:"size:50;default:'ACTIVE'" json:"status"`
-	CategoryID  *uint          `gorm:"column:screen_category_id" json:"screen_category_id,omitempty"`
-	Key         string         `gorm:"column:key;size:255" json:"key,omitempty"`
-	Label       string         `gorm:"size:255" json:"label,omitempty"`
-	IsDefault   bool           `gorm:"column:is_default;default:false" json:"is_default"`
+	ID          uint   `gorm:"primaryKey" json:"id"`
+	Title       string `gorm:"size:255;not null" json:"title"`
+	Description string `gorm:"type:text" json:"description,omitempty"`
+	Type        string `gorm:"size:50;default:'FORM'" json:"type"`
+	Config      string `gorm:"type:longtext" json:"config,omitempty"`
+	Computed    string `gorm:"type:longtext" json:"computed,omitempty"`
+	Watchers    string `gorm:"type:longtext" json:"watchers,omitempty"`
+	CustomCSS   string `gorm:"column:custom_css;type:longtext" json:"custom_css,omitempty"`
+	Status      string `gorm:"size:50;default:'ACTIVE'" json:"status"`
+	CategoryID  *uint  `gorm:"column:screen_category_id" json:"screen_category_id,omitempty"`
+	Key         string `gorm:"column:key;size:255" json:"key,omitempty"`
+	Label       string `gorm:"size:255" json:"label,omitempty"`
+	IsDefault   bool   `gorm:"column:is_default;default:false" json:"is_default"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -52,9 +52,9 @@ func (Screen) TableName() string {
 
 // ScreenCategory represents the `screen_categories` table.
 type ScreenCategory struct {
-	ID     uint           `gorm:"primaryKey" json:"id"`
-	Name   string         `gorm:"size:255;not null" json:"name"`
-	Status string         `gorm:"size:50;default:'ACTIVE'" json:"status"`
+	ID     uint   `gorm:"primaryKey" json:"id"`
+	Name   string `gorm:"size:255;not null" json:"name"`
+	Status string `gorm:"size:50;default:'ACTIVE'" json:"status"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -67,19 +67,19 @@ func (ScreenCategory) TableName() string {
 
 // Script represents the `scripts` table.
 type Script struct {
-	ID               uint           `gorm:"primaryKey" json:"id"`
-	Key              string         `gorm:"size:255;unique" json:"key"`
-	Title            string         `gorm:"column:title;size:255;not null" json:"title"`
-	Description      string         `gorm:"type:text" json:"description,omitempty"`
-	Language         string         `gorm:"size:50;default:'php'" json:"language"`
-	Code             string         `gorm:"type:longtext" json:"code,omitempty"`
-	Status           string         `gorm:"size:50;default:'ACTIVE'" json:"status"`
-	CategoryID       *uint          `gorm:"column:script_category_id" json:"script_category_id,omitempty"`
-	RunAsUserID      *uint          `gorm:"column:run_as_user_id" json:"run_as_user_id,omitempty"`
-	Timeout          int            `gorm:"default:60" json:"timeout"`
-	RetryAttempts    int            `gorm:"column:retry_attempts;default:0" json:"retry_attempts"`
-	RetryWaitTime    int            `gorm:"column:retry_wait_time;default:0" json:"retry_wait_time"`
-	ScriptExecutorID *uint          `gorm:"column:script_executor_id" json:"script_executor_id,omitempty"`
+	ID               uint   `gorm:"primaryKey" json:"id"`
+	Key              string `gorm:"size:255;unique" json:"key"`
+	Title            string `gorm:"column:title;size:255;not null" json:"title"`
+	Description      string `gorm:"type:text" json:"description,omitempty"`
+	Language         string `gorm:"size:50;default:'php'" json:"language"`
+	Code             string `gorm:"type:longtext" json:"code,omitempty"`
+	Status           string `gorm:"size:50;default:'ACTIVE'" json:"status"`
+	CategoryID       *uint  `gorm:"column:script_category_id" json:"script_category_id,omitempty"`
+	RunAsUserID      *uint  `gorm:"column:run_as_user_id" json:"run_as_user_id,omitempty"`
+	Timeout          int    `gorm:"default:60" json:"timeout"`
+	RetryAttempts    int    `gorm:"column:retry_attempts;default:0" json:"retry_attempts"`
+	RetryWaitTime    int    `gorm:"column:retry_wait_time;default:0" json:"retry_wait_time"`
+	ScriptExecutorID *uint  `gorm:"column:script_executor_id" json:"script_executor_id,omitempty"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -96,13 +96,13 @@ func (Script) TableName() string {
 
 // ScriptExecutor represents the `script_executors` table.
 type ScriptExecutor struct {
-	ID          uint           `gorm:"primaryKey" json:"id"`
-	Title       string         `gorm:"size:255;not null" json:"title"`
-	Description string         `gorm:"type:text" json:"description,omitempty"`
-	Language    string         `gorm:"size:50;not null" json:"language"`
-	Config      string         `gorm:"type:text" json:"config,omitempty"`
-	IsSystem    bool           `gorm:"default:false" json:"is_system"`
-	Type        string         `gorm:"size:50" json:"type,omitempty"`
+	ID          uint   `gorm:"primaryKey" json:"id"`
+	Title       string `gorm:"size:255;not null" json:"title"`
+	Description string `gorm:"type:text" json:"description,omitempty"`
+	Language    string `gorm:"size:50;not null" json:"language"`
+	Config      string `gorm:"type:text" json:"config,omitempty"`
+	IsSystem    bool   `gorm:"default:false" json:"is_system"`
+	Type        string `gorm:"size:50" json:"type,omitempty"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -115,9 +115,9 @@ func (ScriptExecutor) TableName() string {
 
 // ScriptCategory represents the `script_categories` table.
 type ScriptCategory struct {
-	ID     uint           `gorm:"primaryKey" json:"id"`
-	Name   string         `gorm:"size:255;not null" json:"name"`
-	Status string         `gorm:"size:50;default:'ACTIVE'" json:"status"`
+	ID     uint   `gorm:"primaryKey" json:"id"`
+	Name   string `gorm:"size:255;not null" json:"name"`
+	Status string `gorm:"size:50;default:'ACTIVE'" json:"status"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -151,11 +151,11 @@ func (Comment) TableName() string {
 
 // Notification represents the `notifications` table.
 type Notification struct {
-	ID             string `gorm:"primaryKey;size:36" json:"id"`
-	Type           string `gorm:"size:255" json:"type"`
-	NotifiableType string `gorm:"size:255" json:"notifiable_type"`
-	NotifiableID   uint   `gorm:"column:notifiable_id" json:"notifiable_id"`
-	Data           string `gorm:"type:text" json:"data"`
+	ID             string     `gorm:"primaryKey;size:36" json:"id"`
+	Type           string     `gorm:"size:255" json:"type"`
+	NotifiableType string     `gorm:"size:255" json:"notifiable_type"`
+	NotifiableID   uint       `gorm:"column:notifiable_id" json:"notifiable_id"`
+	Data           string     `gorm:"type:text" json:"data"`
 	ReadAt         *time.Time `json:"read_at,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
@@ -238,19 +238,19 @@ func (ProcessLaunchpad) TableName() string {
 // ──────────────────────────────────────────────────────────────────────────────
 
 type Media struct {
-	ID               uint           `gorm:"primaryKey" json:"id"`
-	ModelType        string         `gorm:"column:model_type;size:255" json:"model_type"`
-	ModelID          string         `gorm:"column:model_id;size:36" json:"model_id"`
-	CollectionName   string         `gorm:"column:collection_name;size:255" json:"collection_name"`
-	Name             string         `gorm:"column:name;size:255" json:"name"`
-	FileName         string         `gorm:"column:file_name;size:255" json:"file_name"`
-	MimeType         string         `gorm:"column:mime_type;size:255" json:"mime_type,omitempty"`
-	Disk             string         `gorm:"column:disk;size:255" json:"disk"`
-	Size             int64          `gorm:"column:size" json:"size"`
-	Manipulations    string         `gorm:"column:manipulations;type:json" json:"manipulations,omitempty"`
-	CustomProperties string         `gorm:"column:custom_properties;type:json" json:"custom_properties,omitempty"`
-	ResponsiveImages string         `gorm:"column:responsive_images;type:json" json:"responsive_images,omitempty"`
-	OrderColumn      int            `gorm:"column:order_column" json:"order_column,omitempty"`
+	ID               uint   `gorm:"primaryKey" json:"id"`
+	ModelType        string `gorm:"column:model_type;size:255" json:"model_type"`
+	ModelID          string `gorm:"column:model_id;size:36" json:"model_id"`
+	CollectionName   string `gorm:"column:collection_name;size:255" json:"collection_name"`
+	Name             string `gorm:"column:name;size:255" json:"name"`
+	FileName         string `gorm:"column:file_name;size:255" json:"file_name"`
+	MimeType         string `gorm:"column:mime_type;size:255" json:"mime_type,omitempty"`
+	Disk             string `gorm:"column:disk;size:255" json:"disk"`
+	Size             int64  `gorm:"column:size" json:"size"`
+	Manipulations    string `gorm:"column:manipulations;type:json" json:"manipulations,omitempty"`
+	CustomProperties string `gorm:"column:custom_properties;type:json" json:"custom_properties,omitempty"`
+	ResponsiveImages string `gorm:"column:responsive_images;type:json" json:"responsive_images,omitempty"`
+	OrderColumn      int    `gorm:"column:order_column" json:"order_column,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -258,4 +258,26 @@ type Media struct {
 
 func (Media) TableName() string {
 	return "media"
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Phase G: Security Logs
+// ──────────────────────────────────────────────────────────────────────────────
+
+type SecurityLog struct {
+	ID          string `gorm:"primaryKey;size:36" json:"id"`
+	UserID      uint   `gorm:"column:user_id" json:"user_id"`
+	IPAddress   string `gorm:"column:ip_address;size:45" json:"ip_address,omitempty"`
+	Channel     string `gorm:"size:255" json:"channel"` // 'api', 'web', 'login'
+	Action      string `gorm:"size:255" json:"action"`  // 'login', 'logout', 'failed_login'
+	Description string `gorm:"type:text" json:"description,omitempty"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+
+	User *User `gorm:"foreignKey:UserID" json:"user,omitempty"`
+}
+
+func (SecurityLog) TableName() string {
+	return "security_logs"
 }

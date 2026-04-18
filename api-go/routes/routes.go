@@ -90,7 +90,6 @@ func Setup(app *fiber.App) {
 	p.Put("/process_launchpads/:id", controllers.UpdateLaunchpad)
 	p.Delete("/process_launchpads/:id", controllers.DeleteLaunchpad)
 
-
 	// ── Phase C1: Screens ────────────────────────────────────────────────
 	p.Get("/screens", controllers.GetScreens)
 	p.Get("/screens/:id", controllers.GetScreen)
@@ -153,7 +152,7 @@ func Setup(app *fiber.App) {
 	p.Get("/requests/:id/tokens", controllers.GetRequestTokens)
 	p.Get("/requests/:id/details-screen-request", controllers.GetRequestDetailsScreen)
 	p.Get("/requests/:id/end-event-destination", controllers.GetRequestEndEventDestination)
-	
+
 	// ── Phase E2.1: Request Files ────────────────────────────────────────
 	p.Get("/requests/:id/files", controllers.GetRequestFiles)
 	p.Post("/requests/:id/files", controllers.UploadRequestFile)
@@ -195,4 +194,11 @@ func Setup(app *fiber.App) {
 	p.Post("/environment_variables", controllers.CreateEnvVar)
 	p.Put("/environment_variables/:id", controllers.UpdateEnvVar)
 	p.Delete("/environment_variables/:id", controllers.DeleteEnvVar)
+
+	// ── Phase G: Security Logs ───────────────────────────────────────────
+	p.Get("/security-logs", controllers.GetSecurityLogs)
+	p.Get("/security-logs/download/all", controllers.DownloadAllSecurityLogs)
+	p.Get("/security-logs/download/:user_id", controllers.DownloadUserSecurityLogs)
+	p.Get("/security-logs/:id", controllers.GetSecurityLog)
+	p.Post("/security-logs", controllers.CreateSecurityLog)
 }

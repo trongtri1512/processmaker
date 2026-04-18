@@ -16,26 +16,26 @@ type Definitions struct {
 
 // BProcess represents a <bpmn:process> element containing all nodes and flows.
 type BProcess struct {
-	ID                string             `xml:"id,attr"`
-	Name              string             `xml:"name,attr"`
-	IsExecutable      bool               `xml:"isExecutable,attr"`
-	StartEvents       []StartEvent       `xml:"startEvent"`
-	EndEvents         []EndEvent         `xml:"endEvent"`
-	UserTasks         []UserTask         `xml:"userTask"`
-	ManualTasks       []ManualTask       `xml:"manualTask"`
-	ServiceTasks      []ServiceTask      `xml:"serviceTask"`
-	ScriptTasks       []ScriptTask       `xml:"scriptTask"`
-	SendTasks         []SendTask         `xml:"sendTask"`
-	SequenceFlows     []SequenceFlow     `xml:"sequenceFlow"`
-	ExclusiveGateways []ExclusiveGateway `xml:"exclusiveGateway"`
-	ParallelGateways  []ParallelGateway  `xml:"parallelGateway"`
-	InclusiveGateways []InclusiveGateway `xml:"inclusiveGateway"`
+	ID                      string                   `xml:"id,attr"`
+	Name                    string                   `xml:"name,attr"`
+	IsExecutable            bool                     `xml:"isExecutable,attr"`
+	StartEvents             []StartEvent             `xml:"startEvent"`
+	EndEvents               []EndEvent               `xml:"endEvent"`
+	UserTasks               []UserTask               `xml:"userTask"`
+	ManualTasks             []ManualTask             `xml:"manualTask"`
+	ServiceTasks            []ServiceTask            `xml:"serviceTask"`
+	ScriptTasks             []ScriptTask             `xml:"scriptTask"`
+	SendTasks               []SendTask               `xml:"sendTask"`
+	SequenceFlows           []SequenceFlow           `xml:"sequenceFlow"`
+	ExclusiveGateways       []ExclusiveGateway       `xml:"exclusiveGateway"`
+	ParallelGateways        []ParallelGateway        `xml:"parallelGateway"`
+	InclusiveGateways       []InclusiveGateway       `xml:"inclusiveGateway"`
 	IntermediateCatchEvents []IntermediateCatchEvent `xml:"intermediateCatchEvent"`
 	IntermediateThrowEvents []IntermediateThrowEvent `xml:"intermediateThrowEvent"`
-	SubProcesses      []SubProcess       `xml:"subProcess"`
-	CallActivities    []CallActivity     `xml:"callActivity"`
-	TextAnnotations   []TextAnnotation   `xml:"textAnnotation"`
-	Associations      []Association      `xml:"association"`
+	SubProcesses            []SubProcess             `xml:"subProcess"`
+	CallActivities          []CallActivity           `xml:"callActivity"`
+	TextAnnotations         []TextAnnotation         `xml:"textAnnotation"`
+	Associations            []Association            `xml:"association"`
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ type UserTask struct {
 	Incoming       []string `xml:"incoming"`
 	Outgoing       []string `xml:"outgoing"`
 	// ProcessMaker extensions
-	Assignment string `xml:"assignment,attr"`
+	Assignment    string `xml:"assignment,attr"`
 	AssignedUsers string `xml:"assignedUsers,attr"`
 }
 
@@ -99,12 +99,12 @@ type ServiceTask struct {
 }
 
 type ScriptTask struct {
-	ID             string   `xml:"id,attr"`
-	Name           string   `xml:"name,attr"`
-	ScriptFormat   string   `xml:"scriptFormat,attr"`
-	Script         string   `xml:"script"`
-	Incoming       []string `xml:"incoming"`
-	Outgoing       []string `xml:"outgoing"`
+	ID           string   `xml:"id,attr"`
+	Name         string   `xml:"name,attr"`
+	ScriptFormat string   `xml:"scriptFormat,attr"`
+	Script       string   `xml:"script"`
+	Incoming     []string `xml:"incoming"`
+	Outgoing     []string `xml:"outgoing"`
 }
 
 type SendTask struct {
@@ -122,11 +122,11 @@ type SubProcess struct {
 }
 
 type CallActivity struct {
-	ID              string   `xml:"id,attr"`
-	Name            string   `xml:"name,attr"`
-	CalledElement   string   `xml:"calledElement,attr"`
-	Incoming        []string `xml:"incoming"`
-	Outgoing        []string `xml:"outgoing"`
+	ID            string   `xml:"id,attr"`
+	Name          string   `xml:"name,attr"`
+	CalledElement string   `xml:"calledElement,attr"`
+	Incoming      []string `xml:"incoming"`
+	Outgoing      []string `xml:"outgoing"`
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -186,20 +186,20 @@ type Association struct {
 type NodeType string
 
 const (
-	NodeStartEvent              NodeType = "startEvent"
-	NodeEndEvent                NodeType = "endEvent"
-	NodeUserTask                NodeType = "userTask"
-	NodeManualTask              NodeType = "manualTask"
-	NodeServiceTask             NodeType = "serviceTask"
-	NodeScriptTask              NodeType = "scriptTask"
-	NodeSendTask                NodeType = "sendTask"
-	NodeExclusiveGateway        NodeType = "exclusiveGateway"
-	NodeParallelGateway         NodeType = "parallelGateway"
-	NodeInclusiveGateway        NodeType = "inclusiveGateway"
-	NodeIntermediateCatchEvent  NodeType = "intermediateCatchEvent"
-	NodeIntermediateThrowEvent  NodeType = "intermediateThrowEvent"
-	NodeSubProcess              NodeType = "subProcess"
-	NodeCallActivity            NodeType = "callActivity"
+	NodeStartEvent             NodeType = "startEvent"
+	NodeEndEvent               NodeType = "endEvent"
+	NodeUserTask               NodeType = "userTask"
+	NodeManualTask             NodeType = "manualTask"
+	NodeServiceTask            NodeType = "serviceTask"
+	NodeScriptTask             NodeType = "scriptTask"
+	NodeSendTask               NodeType = "sendTask"
+	NodeExclusiveGateway       NodeType = "exclusiveGateway"
+	NodeParallelGateway        NodeType = "parallelGateway"
+	NodeInclusiveGateway       NodeType = "inclusiveGateway"
+	NodeIntermediateCatchEvent NodeType = "intermediateCatchEvent"
+	NodeIntermediateThrowEvent NodeType = "intermediateThrowEvent"
+	NodeSubProcess             NodeType = "subProcess"
+	NodeCallActivity           NodeType = "callActivity"
 )
 
 type NodeInfo struct {

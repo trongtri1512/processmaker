@@ -15,8 +15,12 @@ func GetGroups(c *fiber.Ctx) error {
 	status := c.Query("status", "ACTIVE")
 	search := c.Query("search", "")
 
-	if page <= 0 { page = 1 }
-	if perPage <= 0 { perPage = 10 }
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
 	offset := (page - 1) * perPage
 
 	var groups []models.Group
@@ -66,7 +70,9 @@ func CreateGroup(c *fiber.Ctx) error {
 	}
 
 	status := input.Status
-	if status == "" { status = "ACTIVE" }
+	if status == "" {
+		status = "ACTIVE"
+	}
 
 	group := models.Group{
 		Name:        input.Name,
@@ -168,7 +174,7 @@ func GetGroupMember(c *fiber.Ctx) error {
 func AddGroupMember(c *fiber.Ctx) error {
 	type Input struct {
 		GroupID    uint   `json:"group_id"`
-		MemberID  uint   `json:"member_id"`
+		MemberID   uint   `json:"member_id"`
 		MemberType string `json:"member_type"`
 	}
 
@@ -183,7 +189,7 @@ func AddGroupMember(c *fiber.Ctx) error {
 
 	member := models.GroupMember{
 		GroupID:    input.GroupID,
-		MemberID:  input.MemberID,
+		MemberID:   input.MemberID,
 		MemberType: input.MemberType,
 	}
 
@@ -291,13 +297,17 @@ func UsersAvailable(c *fiber.Ctx) error {
 
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	perPage, _ := strconv.Atoi(c.Query("per_page", "10"))
-	if page <= 0 { page = 1 }
-	if perPage <= 0 { perPage = 10 }
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
 
 	var total int64
 	var users []models.User
 	query.Count(&total)
-	query.Order("firstname asc").Offset((page-1)*perPage).Limit(perPage).Find(&users)
+	query.Order("firstname asc").Offset((page - 1) * perPage).Limit(perPage).Find(&users)
 
 	return c.JSON(fiber.Map{
 		"data": users,
@@ -391,4 +401,3 @@ func syncPermissions(entityID uint, entityType string, permissionNames []string)
 		)
 	}
 }
-

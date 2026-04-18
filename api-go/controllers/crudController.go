@@ -18,8 +18,12 @@ func genericList(c *fiber.Ctx, model interface{}, searchFields ...string) error 
 	search := c.Query("search", "")
 	status := c.Query("status", "")
 
-	if page <= 0 { page = 1 }
-	if perPage <= 0 { perPage = 10 }
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
 	offset := (page - 1) * perPage
 
 	var total int64
@@ -70,7 +74,9 @@ func CreateProcess(c *fiber.Ctx) error {
 	}
 
 	status := input.Status
-	if status == "" { status = "ACTIVE" }
+	if status == "" {
+		status = "ACTIVE"
+	}
 
 	// Default BPMN template
 	bpmn := `<?xml version="1.0" encoding="UTF-8"?>
@@ -152,7 +158,9 @@ func CreateProcessCategory(c *fiber.Ctx) error {
 	if err := c.BodyParser(&cat); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid body"})
 	}
-	if cat.Status == "" { cat.Status = "ACTIVE" }
+	if cat.Status == "" {
+		cat.Status = "ACTIVE"
+	}
 	database.DB.Create(&cat)
 	return c.Status(201).JSON(cat)
 }
@@ -184,12 +192,20 @@ func GetScreens(c *fiber.Ctx) error {
 	var items []models.Screen
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	perPage, _ := strconv.Atoi(c.Query("per_page", "10"))
-	if page <= 0 { page = 1 }
-	if perPage <= 0 { perPage = 10 }
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
 	var total int64
 	query := database.DB.Model(&models.Screen{})
-	if s := c.Query("type", ""); s != "" { query = query.Where("type = ?", s) }
-	if s := c.Query("status", ""); s != "" { query = query.Where("status = ?", s) }
+	if s := c.Query("type", ""); s != "" {
+		query = query.Where("type = ?", s)
+	}
+	if s := c.Query("status", ""); s != "" {
+		query = query.Where("status = ?", s)
+	}
 	if s := c.Query("screen_category_id", ""); s != "" {
 		query = query.Where("screen_category_id = ?", s)
 	}
@@ -198,7 +214,7 @@ func GetScreens(c *fiber.Ctx) error {
 		query = query.Where("title LIKE ? OR description LIKE ?", f, f)
 	}
 	query.Count(&total)
-	query.Preload("Category").Order("created_at desc").Offset((page-1)*perPage).Limit(perPage).Find(&items)
+	query.Preload("Category").Order("created_at desc").Offset((page - 1) * perPage).Limit(perPage).Find(&items)
 	return c.JSON(fiber.Map{"data": items, "meta": paginationMeta(page, perPage, total)})
 }
 
@@ -216,8 +232,12 @@ func CreateScreen(c *fiber.Ctx) error {
 	if item.Title == "" {
 		return c.Status(422).JSON(fiber.Map{"error": "title is required"})
 	}
-	if item.Type == "" { item.Type = "FORM" }
-	if item.Status == "" { item.Status = "ACTIVE" }
+	if item.Type == "" {
+		item.Type = "FORM"
+	}
+	if item.Status == "" {
+		item.Status = "ACTIVE"
+	}
 	database.DB.Create(&item)
 	return c.Status(201).JSON(item)
 }
@@ -356,7 +376,9 @@ func CreateScreenCategory(c *fiber.Ctx) error {
 	if item.Name == "" {
 		return c.Status(422).JSON(fiber.Map{"error": "name is required"})
 	}
-	if item.Status == "" { item.Status = "ACTIVE" }
+	if item.Status == "" {
+		item.Status = "ACTIVE"
+	}
 	database.DB.Create(&item)
 	return c.Status(201).JSON(item)
 }
@@ -386,12 +408,20 @@ func GetScripts(c *fiber.Ctx) error {
 	var items []models.Script
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	perPage, _ := strconv.Atoi(c.Query("per_page", "10"))
-	if page <= 0 { page = 1 }
-	if perPage <= 0 { perPage = 10 }
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
 	var total int64
 	query := database.DB.Model(&models.Script{})
-	if s := c.Query("type", ""); s != "" { query = query.Where("type = ?", s) }
-	if s := c.Query("status", ""); s != "" { query = query.Where("status = ?", s) }
+	if s := c.Query("type", ""); s != "" {
+		query = query.Where("type = ?", s)
+	}
+	if s := c.Query("status", ""); s != "" {
+		query = query.Where("status = ?", s)
+	}
 	if s := c.Query("script_category_id", ""); s != "" {
 		query = query.Where("script_category_id = ?", s)
 	}
@@ -401,7 +431,7 @@ func GetScripts(c *fiber.Ctx) error {
 	}
 	query.Count(&total)
 	query.Preload("Category").Preload("RunAsUser").Preload("ScriptExecutor").
-		Order("created_at desc").Offset((page-1)*perPage).Limit(perPage).Find(&items)
+		Order("created_at desc").Offset((page - 1) * perPage).Limit(perPage).Find(&items)
 	return c.JSON(fiber.Map{"data": items, "meta": paginationMeta(page, perPage, total)})
 }
 
@@ -420,9 +450,15 @@ func CreateScript(c *fiber.Ctx) error {
 	if item.Title == "" {
 		return c.Status(422).JSON(fiber.Map{"error": "title is required"})
 	}
-	if item.Status == "" { item.Status = "ACTIVE" }
-	if item.Language == "" { item.Language = "php" }
-	if item.Timeout <= 0 { item.Timeout = 60 }
+	if item.Status == "" {
+		item.Status = "ACTIVE"
+	}
+	if item.Language == "" {
+		item.Language = "php"
+	}
+	if item.Timeout <= 0 {
+		item.Timeout = 60
+	}
 	database.DB.Create(&item)
 	return c.Status(201).JSON(item)
 }
@@ -533,7 +569,9 @@ func CreateScriptCategory(c *fiber.Ctx) error {
 	if item.Name == "" {
 		return c.Status(422).JSON(fiber.Map{"error": "name is required"})
 	}
-	if item.Status == "" { item.Status = "ACTIVE" }
+	if item.Status == "" {
+		item.Status = "ACTIVE"
+	}
 	database.DB.Create(&item)
 	return c.Status(201).JSON(item)
 }
@@ -645,8 +683,12 @@ func GetNotifications(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	perPage, _ := strconv.Atoi(c.Query("per_page", "10"))
-	if page <= 0 { page = 1 }
-	if perPage <= 0 { perPage = 10 }
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
 
 	var items []models.Notification
 	var total int64
@@ -654,7 +696,7 @@ func GetNotifications(c *fiber.Ctx) error {
 	query := database.DB.Model(&models.Notification{}).
 		Where("notifiable_id = ? AND notifiable_type = ?", user.ID, "ProcessMaker\\Models\\User")
 	query.Count(&total)
-	query.Order("created_at desc").Offset((page-1)*perPage).Limit(perPage).Find(&items)
+	query.Order("created_at desc").Offset((page - 1) * perPage).Limit(perPage).Find(&items)
 
 	return c.JSON(fiber.Map{"data": items, "meta": paginationMeta(page, perPage, total)})
 }
@@ -793,7 +835,7 @@ func ImportSettings(c *fiber.Ctx) error {
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid format"})
 	}
-	
+
 	// Update or create mock logic
 	for _, setting := range payload {
 		var existing models.Setting
@@ -849,4 +891,62 @@ func UpdateEnvVar(c *fiber.Ctx) error {
 func DeleteEnvVar(c *fiber.Ctx) error {
 	database.DB.Delete(&models.EnvironmentVariable{}, c.Params("id"))
 	return c.JSON(fiber.Map{"status": "success"})
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Phase G: Security Logs
+// ──────────────────────────────────────────────────────────────────────────────
+
+func GetSecurityLogs(c *fiber.Ctx) error {
+	var items []models.SecurityLog
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	perPage, _ := strconv.Atoi(c.Query("per_page", "10"))
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
+	var total int64
+	query := database.DB.Model(&models.SecurityLog{})
+	if uID := c.Query("user_id", ""); uID != "" {
+		query = query.Where("user_id = ?", uID)
+	}
+	if a := c.Query("action", ""); a != "" {
+		query = query.Where("action = ?", a)
+	}
+	query.Count(&total)
+	query.Preload("User").Order("created_at desc").Offset((page - 1) * perPage).Limit(perPage).Find(&items)
+	return c.JSON(fiber.Map{"data": items, "meta": paginationMeta(page, perPage, total)})
+}
+
+func GetSecurityLog(c *fiber.Ctx) error {
+	var item models.SecurityLog
+	if err := database.DB.Preload("User").First(&item, "id = ?", c.Params("id")).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Not found"})
+	}
+	return c.JSON(item)
+}
+
+func CreateSecurityLog(c *fiber.Ctx) error {
+	var item models.SecurityLog
+	if err := c.BodyParser(&item); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid format"})
+	}
+	database.DB.Create(&item)
+	return c.Status(201).JSON(item)
+}
+
+func DownloadAllSecurityLogs(c *fiber.Ctx) error {
+	// Returns a mock CSV download
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=security_logs.csv")
+	return c.SendString("id,user_id,ip_address,channel,action,created_at\n")
+}
+
+func DownloadUserSecurityLogs(c *fiber.Ctx) error {
+	// Returns a mock CSV download
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=user_security_logs.csv")
+	return c.SendString("id,user_id,ip_address,channel,action,created_at\n")
 }

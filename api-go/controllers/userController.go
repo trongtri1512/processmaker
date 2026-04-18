@@ -16,8 +16,12 @@ func GetUsers(c *fiber.Ctx) error {
 	status := c.Query("status", "ACTIVE")
 	search := c.Query("search", "")
 
-	if page <= 0 { page = 1 }
-	if perPage <= 0 { perPage = 10 }
+	if page <= 0 {
+		page = 1
+	}
+	if perPage <= 0 {
+		perPage = 10
+	}
 	offset := (page - 1) * perPage
 
 	var users []models.User
@@ -53,24 +57,24 @@ func GetUser(c *fiber.Ctx) error {
 // CreateUser handles POST /users
 func CreateUser(c *fiber.Ctx) error {
 	type CreateUserInput struct {
-		Username  string `json:"username"`
-		Email     string `json:"email"`
-		Password  string `json:"password"`
-		Firstname string `json:"firstname"`
-		Lastname  string `json:"lastname"`
-		Status    string `json:"status"`
-		Title     string `json:"title"`
-		Phone     string `json:"phone"`
-		Cell      string `json:"cell"`
-		Fax       string `json:"fax"`
-		Address   string `json:"address"`
-		City      string `json:"city"`
-		State     string `json:"state"`
-		Postal    string `json:"postal"`
-		Country   string `json:"country"`
-		Timezone  string `json:"timezone"`
-		Language  string `json:"language"`
-		IsAdministrator bool `json:"is_administrator"`
+		Username        string `json:"username"`
+		Email           string `json:"email"`
+		Password        string `json:"password"`
+		Firstname       string `json:"firstname"`
+		Lastname        string `json:"lastname"`
+		Status          string `json:"status"`
+		Title           string `json:"title"`
+		Phone           string `json:"phone"`
+		Cell            string `json:"cell"`
+		Fax             string `json:"fax"`
+		Address         string `json:"address"`
+		City            string `json:"city"`
+		State           string `json:"state"`
+		Postal          string `json:"postal"`
+		Country         string `json:"country"`
+		Timezone        string `json:"timezone"`
+		Language        string `json:"language"`
+		IsAdministrator bool   `json:"is_administrator"`
 	}
 
 	var input CreateUserInput
@@ -96,11 +100,17 @@ func CreateUser(c *fiber.Ctx) error {
 	}
 
 	status := input.Status
-	if status == "" { status = "ACTIVE" }
+	if status == "" {
+		status = "ACTIVE"
+	}
 	tz := input.Timezone
-	if tz == "" { tz = "UTC" }
+	if tz == "" {
+		tz = "UTC"
+	}
 	lang := input.Language
-	if lang == "" { lang = "en" }
+	if lang == "" {
+		lang = "en"
+	}
 
 	user := models.User{
 		Username:        input.Username,
